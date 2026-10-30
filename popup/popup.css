@@ -1,0 +1,349 @@
+/* Unimed Privacy Pro - White & Green Corporate Theme Popup Styles */
+
+:root {
+  --bg-body: #F4F6F8;
+  --bg-card: #FFFFFF;
+  --bg-card-hover: #F8FAFC;
+  --unimed-green: #00995D;
+  --unimed-green-dark: #007547;
+  --unimed-green-hover: #00B36C;
+  --unimed-green-light: #E6F5F0;
+  --unimed-green-glow: rgba(0, 153, 93, 0.25);
+  --text-main: #0F172A;
+  --text-muted: #64748B;
+  --border-color: #E2E8F0;
+  --border-green: #A3E0C9;
+  --radius-lg: 8px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+body {
+  width: 410px;
+  background-color: var(--bg-body);
+  color: var(--text-main);
+  font-size: 13px;
+  user-select: none;
+  overflow: hidden; /* Prevents scrollbar */
+}
+
+/* Centered Header Frame - Green Highlight Layer */
+.header {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 8px 12px;
+  background: linear-gradient(135deg, var(--unimed-green) 0%, var(--unimed-green-dark) 100%);
+  border-bottom: 2px solid var(--unimed-green-dark);
+  box-shadow: 0 2px 6px rgba(0, 153, 93, 0.2);
+}
+
+.brand.centered {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+}
+
+.logo-container {
+  width: 40px;
+  height: 40px;
+  background-color: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+}
+
+.brand-logo {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.brand-text.centered {
+  text-align: left;
+}
+
+.brand-text .title {
+  display: block;
+  font-size: 17px;
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: 0.5px;
+  line-height: 1.1;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.brand-text .subtitle {
+  display: block;
+  font-size: 11px;
+  color: #E6F5F0;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  font-weight: 700;
+  line-height: 1.1;
+  opacity: 0.95;
+}
+
+.container {
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.card {
+  background-color: var(--bg-card);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  overflow: hidden;
+}
+
+
+.section-title {
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--unimed-green-dark);
+  margin-left: 2px;
+}
+
+.preset-group {
+  display: flex;
+  gap: 4px;
+  background-color: #E2E8F0;
+  padding: 3px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+}
+
+.preset-btn {
+  flex: 1;
+  padding: 4px 0;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.preset-btn.active {
+  background-color: var(--unimed-green);
+  color: #ffffff;
+  box-shadow: 0 1px 4px var(--unimed-green-glow);
+}
+
+.preset-btn:hover:not(.active) {
+  background-color: #CBD5E1;
+  color: var(--text-main);
+}
+
+.options-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.option-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 5px 10px;
+  border-bottom: 1px solid var(--border-color);
+  transition: background-color 0.2s ease;
+}
+
+.option-item:last-child {
+  border-bottom: none;
+}
+
+.option-item:hover {
+  background-color: var(--bg-card-hover);
+}
+
+.option-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.option-icon {
+  color: var(--unimed-green);
+  flex-shrink: 0;
+  width: 15px;
+  height: 15px;
+}
+
+.option-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.option-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.time-select {
+  background-color: #FFFFFF;
+  color: var(--text-main);
+  border: 1px solid var(--border-green);
+  border-radius: 4px;
+  padding: 2px 4px;
+  font-size: 11px;
+  font-weight: 600;
+  outline: none;
+  cursor: pointer;
+}
+
+.time-select:focus {
+  border-color: var(--unimed-green);
+}
+
+/* Switch Styling */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 36px;
+  height: 18px;
+  outline: none;
+  flex-shrink: 0;
+}
+
+.switch.small {
+  width: 32px;
+  height: 16px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #CBD5E1;
+  transition: .25s ease;
+  border-radius: 20px;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 14px;
+  width: 14px;
+  left: 2px;
+  bottom: 2px;
+  background-color: #ffffff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  transition: .25s ease;
+  border-radius: 50%;
+}
+
+.switch.small .slider:before {
+  height: 12px;
+  width: 12px;
+  left: 2px;
+  bottom: 2px;
+}
+
+input:checked + .slider {
+  background-color: var(--unimed-green);
+}
+
+input:focus-visible + .slider {
+  box-shadow: 0 0 0 2px var(--unimed-green-hover);
+}
+
+input:checked + .slider:before {
+  transform: translateX(18px);
+}
+
+.switch.small input:checked + .slider:before {
+  transform: translateX(16px);
+}
+
+.panic-banner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #FEF2F2;
+  border: 1px solid #FCA5A5;
+  border-radius: var(--radius-sm);
+  padding: 6px 10px;
+  font-size: 11.5px;
+  color: #991B1B;
+}
+
+.panic-info {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.panic-info svg {
+  color: #DC2626;
+  flex-shrink: 0;
+}
+
+.exit-panic-btn {
+  background-color: #DC2626;
+  color: #FFFFFF;
+  border: none;
+  border-radius: 4px;
+  padding: 3px 8px;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.exit-panic-btn:hover {
+  background-color: #B91C1C;
+}
+
+.shortcut-banner {
+  background: var(--unimed-green-light);
+  border: 1px dashed var(--unimed-green);
+  border-radius: var(--radius-sm);
+  padding: 5px 8px;
+  text-align: center;
+  font-size: 11px;
+  color: var(--unimed-green-dark);
+}
+
+.shortcut-banner strong {
+  color: var(--unimed-green);
+}
+
+/* Footer Frame - Green Highlight Layer */
+.footer {
+  padding: 6px 10px;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 600;
+  color: #FFFFFF;
+  border-top: 2px solid var(--unimed-green-dark);
+  background: linear-gradient(135deg, var(--unimed-green-dark) 0%, #005C38 100%);
+  letter-spacing: 0.3px;
+}

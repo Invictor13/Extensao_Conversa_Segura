@@ -1,0 +1,95 @@
+/* Unimed Privacy Extension Content Styles */
+
+:root {
+  --unimed-green-censor: #00995D;
+  --unimed-censor-gradient: linear-gradient(135deg, rgba(0, 153, 93, 0.95), rgba(0, 117, 71, 0.95));
+}
+
+/* Base censor transition effect */
+.unimed-censor-transition {
+  transition: filter 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease, transform 0.3s ease !important;
+}
+
+/* --- 1. MESSAGES IN CHAT --- */
+body.unimed-hide-messages #main .message-in div.copyable-text,
+body.unimed-hide-messages #main .message-out div.copyable-text,
+body.unimed-hide-messages #main [data-id] .aria-label,
+body.unimed-hide-messages #main [data-testid="msg-container"],
+body.unimed-hide-messages #main div[data-pre-plain-text] {
+  filter: blur(8px) !important;
+  transition: filter 0.25s ease-in-out, opacity 0.25s ease !important;
+}
+
+/* --- 2. MESSAGE PREVIEWS IN SIDEBAR (Exclusively last message snippets) --- */
+body.unimed-hide-previews #pane-side [data-testid="cell-frame-subtitle"],
+body.unimed-hide-previews #pane-side [data-testid="last-msg-status"],
+body.unimed-hide-previews #pane-side [data-testid="cell-frame-container"] div._ak8l,
+body.unimed-hide-previews #pane-side [data-testid="cell-frame-container"] div._ak8i:not([data-testid="cell-frame-time"]) {
+  filter: blur(6px) !important;
+  transition: filter 0.25s ease-in-out !important;
+}
+
+/* --- 3. PROFILE PHOTOS --- */
+body.unimed-hide-photos #side img,
+body.unimed-hide-photos #side image,
+body.unimed-hide-photos #pane-side img,
+body.unimed-hide-photos #pane-side image,
+body.unimed-hide-photos #main header img,
+body.unimed-hide-photos #main header image,
+body.unimed-hide-photos #main .message-in img[src*="dyn"],
+body.unimed-hide-photos #main .message-out img[src*="dyn"],
+body.unimed-hide-photos [data-testid="avatar-tile"],
+body.unimed-hide-photos [data-testid="chat-avatar"],
+body.unimed-hide-photos [data-testid="community-avatar"],
+body.unimed-hide-photos [data-testid="status-v3-avatar"],
+body.unimed-hide-photos [data-testid="search-results"] img,
+body.unimed-hide-photos [data-testid="chat-list-search"] img,
+body.unimed-hide-photos [data-testid="recent-search-list"] img,
+body.unimed-hide-photos [data-testid="recent-search-item"] img,
+body.unimed-hide-photos div[role="gridcell"] img,
+body.unimed-hide-photos [data-icon="default-user"],
+body.unimed-hide-photos [data-icon="default-group"],
+body.unimed-hide-photos [data-icon="default-community"] {
+  filter: blur(10px) grayscale(50%) !important;
+  transition: filter 0.25s ease-in-out !important;
+}
+
+/* --- 4. CONTACT, GROUP & SENDER NAMES --- */
+body.unimed-hide-names #side [data-testid="cell-frame-title"],
+body.unimed-hide-names #side span[title][dir="auto"],
+body.unimed-hide-names #pane-side [data-testid="cell-frame-title"],
+body.unimed-hide-names #pane-side span[title][dir="auto"],
+body.unimed-hide-names #main header span[title][dir="auto"],
+body.unimed-hide-names #main header [data-testid="chat-title"],
+body.unimed-hide-names #main header [data-testid="conversation-info-header"],
+body.unimed-hide-names #main .message-in span[dir="auto"]._ak8j,
+body.unimed-hide-names #main .message-in [data-testid="author"],
+body.unimed-hide-names [data-testid="status-v3-panel"] [data-testid="cell-frame-title"],
+body.unimed-hide-names [data-testid="status-v3-panel"] span[title][dir="auto"],
+body.unimed-hide-names [data-testid="status-viewer-header"] span[title][dir="auto"],
+body.unimed-hide-names [data-testid="search-results"] [data-testid="cell-frame-title"],
+body.unimed-hide-names [data-testid="search-results"] span[title][dir="auto"],
+body.unimed-hide-names [data-testid="recent-search-list"] span,
+body.unimed-hide-names [data-testid="recent-search-item"] span,
+body.unimed-hide-names [data-testid="chat-list-search"] span,
+body.unimed-hide-names [data-testid="chatlist-header"] span {
+  filter: blur(7px) !important;
+  transition: filter 0.25s ease-in-out !important;
+}
+
+/* --- 5. MEDIA AND IMAGES --- */
+body.unimed-hide-media #main [data-testid="image-thumb"],
+body.unimed-hide-media #main [data-testid="video-thumb"],
+body.unimed-hide-media #main [data-testid="audio-player"],
+body.unimed-hide-media #main [data-testid="sticker"],
+body.unimed-hide-media #main .message-in img:not([src*="emoji"]):not([src*="dyn"]),
+body.unimed-hide-media #main .message-out img:not([src*="emoji"]):not([src*="dyn"]),
+body.unimed-hide-media #main video,
+body.unimed-hide-media #main canvas,
+body.unimed-hide-media [data-testid="status-viewer"] img,
+body.unimed-hide-media [data-testid="status-viewer"] video,
+body.unimed-hide-media [data-testid="status-viewer"] canvas {
+  filter: blur(16px) brightness(0.8) !important;
+  transition: filter 0.3s ease-in-out !important;
+}
+
