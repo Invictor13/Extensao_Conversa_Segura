@@ -1,14 +1,14 @@
-/* Unimed Privacy Pro - White & Green Corporate Theme Popup Styles */
+/* Victor Ladislau Viana Privacy Pro - Corporate Theme Popup Styles */
 
 :root {
   --bg-body: #F4F6F8;
   --bg-card: #FFFFFF;
   --bg-card-hover: #F8FAFC;
-  --unimed-green: #00995D;
-  --unimed-green-dark: #007547;
-  --unimed-green-hover: #00B36C;
-  --unimed-green-light: #E6F5F0;
-  --unimed-green-glow: rgba(0, 153, 93, 0.25);
+  --vlv-green: #00995D;
+  --vlv-green-dark: #007547;
+  --vlv-green-hover: #00B36C;
+  --vlv-green-light: #E6F5F0;
+  --vlv-green-glow: rgba(0, 153, 93, 0.25);
   --text-main: #0F172A;
   --text-muted: #64748B;
   --border-color: #E2E8F0;
@@ -40,8 +40,8 @@ body {
   justify-content: center;
   align-items: center;
   padding: 8px 12px;
-  background: linear-gradient(135deg, var(--unimed-green) 0%, var(--unimed-green-dark) 100%);
-  border-bottom: 2px solid var(--unimed-green-dark);
+  background: linear-gradient(135deg, var(--vlv-green) 0%, var(--vlv-green-dark) 100%);
+  border-bottom: 2px solid var(--vlv-green-dark);
   box-shadow: 0 2px 6px rgba(0, 153, 93, 0.2);
 }
 
@@ -74,7 +74,7 @@ body {
 
 .brand-text .title {
   display: block;
-  font-size: 17px;
+  font-size: 16px;
   font-weight: 800;
   color: #ffffff;
   letter-spacing: 0.5px;
@@ -114,7 +114,7 @@ body {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.8px;
-  color: var(--unimed-green-dark);
+  color: var(--vlv-green-dark);
   margin-left: 2px;
 }
 
@@ -141,9 +141,9 @@ body {
 }
 
 .preset-btn.active {
-  background-color: var(--unimed-green);
+  background-color: var(--vlv-green);
   color: #ffffff;
-  box-shadow: 0 1px 4px var(--unimed-green-glow);
+  box-shadow: 0 1px 4px var(--vlv-green-glow);
 }
 
 .preset-btn:hover:not(.active) {
@@ -180,7 +180,7 @@ body {
 }
 
 .option-icon {
-  color: var(--unimed-green);
+  color: var(--vlv-green);
   flex-shrink: 0;
   width: 15px;
   height: 15px;
@@ -211,7 +211,7 @@ body {
 }
 
 .time-select:focus {
-  border-color: var(--unimed-green);
+  border-color: var(--vlv-green);
 }
 
 /* Switch Styling */
@@ -268,11 +268,11 @@ body {
 }
 
 input:checked + .slider {
-  background-color: var(--unimed-green);
+  background-color: var(--vlv-green);
 }
 
 input:focus-visible + .slider {
-  box-shadow: 0 0 0 2px var(--unimed-green-hover);
+  box-shadow: 0 0 0 2px var(--vlv-green-hover);
 }
 
 input:checked + .slider:before {
@@ -323,17 +323,17 @@ input:checked + .slider:before {
 }
 
 .shortcut-banner {
-  background: var(--unimed-green-light);
-  border: 1px dashed var(--unimed-green);
+  background: var(--vlv-green-light);
+  border: 1px dashed var(--vlv-green);
   border-radius: var(--radius-sm);
   padding: 5px 8px;
   text-align: center;
   font-size: 11px;
-  color: var(--unimed-green-dark);
+  color: var(--vlv-green-dark);
 }
 
 .shortcut-banner strong {
-  color: var(--unimed-green);
+  color: var(--vlv-green);
 }
 
 /* Footer Frame - Green Highlight Layer */
@@ -343,7 +343,7 @@ input:checked + .slider:before {
   font-size: 11px;
   font-weight: 600;
   color: #FFFFFF;
-  border-top: 2px solid var(--unimed-green-dark);
-  background: linear-gradient(135deg, var(--unimed-green-dark) 0%, #005C38 100%);
+  border-top: 2px solid var(--vlv-green-dark);
+  background: linear-gradient(135deg, var(--vlv-green-dark) 0%, #005C38 100%);
   letter-spacing: 0.3px;
 }

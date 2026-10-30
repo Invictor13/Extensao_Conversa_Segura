@@ -1,5 +1,5 @@
 /**
- * Unimed Privacy Pro - Privacy Engine
+ * Victor Ladislau Viana Privacy Pro - Privacy Engine
  * Centralized Manager for effective privacy protection state.
  * Evaluates logical OR of user settings and active temporary conditions:
  * - Emergency Protection (Alt+Q panic)
@@ -12,7 +12,7 @@
   if (typeof module === 'object' && module.exports) {
     module.exports = factory();
   } else {
-    root.UnimedPrivacyEngine = factory();
+    root.PrivacyEngine = factory();
   }
 })(typeof self !== 'undefined' ? self : this, function () {
   'use strict';
@@ -80,11 +80,11 @@
    */
   function evaluateAndApply() {
     const effective = getEffectiveSettings();
-    if (typeof UnimedWhatsAppIntegration !== 'undefined' && UnimedWhatsAppIntegration.applyClasses) {
-      UnimedWhatsAppIntegration.applyClasses(effective);
+    if (typeof WhatsAppIntegration !== 'undefined' && WhatsAppIntegration.applyClasses) {
+      WhatsAppIntegration.applyClasses(effective);
     }
-    if (typeof UnimedVisualEngine !== 'undefined' && UnimedVisualEngine.updateState) {
-      UnimedVisualEngine.updateState(effective);
+    if (typeof VisualEngine !== 'undefined' && VisualEngine.updateState) {
+      VisualEngine.updateState(effective);
     }
   }
 

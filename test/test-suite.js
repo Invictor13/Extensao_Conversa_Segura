@@ -1,5 +1,5 @@
 /**
- * Test Suite for Unimed Privacy Pro
+ * Test Suite for Victor Ladislau Viana Privacy Pro
  * Verifies SettingsManager, WhatsAppIntegration, and Context Invalidation error handling.
  */
 
@@ -72,8 +72,8 @@ const WhatsAppIntegration = require('../src/engine/whatsapp-integration.js');
 const PrivacyEngine = require('../src/engine/privacy-engine.js');
 const VisualEngine = require('../src/engine/visual-engine.js');
 
-global.UnimedWhatsAppIntegration = WhatsAppIntegration;
-global.UnimedVisualEngine = VisualEngine;
+global.WhatsAppIntegration = WhatsAppIntegration;
+global.VisualEngine = VisualEngine;
 
 console.log('1. Testing SettingsManager schema sanitization & preset detection...');
 const defaultSanitized = SettingsManager.sanitizeSettings({});
@@ -164,11 +164,11 @@ WhatsAppIntegration.applyClasses({
   hideMedia: true
 });
 
-assert.strictEqual(document.body.classList.contains('unimed-hide-messages'), true);
-assert.strictEqual(document.body.classList.contains('unimed-hide-previews'), true);
-assert.strictEqual(document.body.classList.contains('unimed-hide-names'), true);
-assert.strictEqual(document.body.classList.contains('unimed-hide-photos'), true);
-assert.strictEqual(document.body.classList.contains('unimed-hide-media'), true);
+assert.strictEqual(document.body.classList.contains('vlv-hide-messages'), true);
+assert.strictEqual(document.body.classList.contains('vlv-hide-previews'), true);
+assert.strictEqual(document.body.classList.contains('vlv-hide-names'), true);
+assert.strictEqual(document.body.classList.contains('vlv-hide-photos'), true);
+assert.strictEqual(document.body.classList.contains('vlv-hide-media'), true);
 
 console.log('6. Testing independent filter toggling (turning off hideNames only)...');
 WhatsAppIntegration.applyClasses({
@@ -179,11 +179,11 @@ WhatsAppIntegration.applyClasses({
   hideMedia: true
 });
 
-assert.strictEqual(document.body.classList.contains('unimed-hide-messages'), true);
-assert.strictEqual(document.body.classList.contains('unimed-hide-previews'), true);
-assert.strictEqual(document.body.classList.contains('unimed-hide-names'), false);
-assert.strictEqual(document.body.classList.contains('unimed-hide-photos'), true);
-assert.strictEqual(document.body.classList.contains('unimed-hide-media'), true);
+assert.strictEqual(document.body.classList.contains('vlv-hide-messages'), true);
+assert.strictEqual(document.body.classList.contains('vlv-hide-previews'), true);
+assert.strictEqual(document.body.classList.contains('vlv-hide-names'), false);
+assert.strictEqual(document.body.classList.contains('vlv-hide-photos'), true);
+assert.strictEqual(document.body.classList.contains('vlv-hide-media'), true);
 console.log('Independent filter toggling test PASSED!');
 
 console.log('All automated tests executed successfully!');

@@ -1,5 +1,5 @@
 /**
- * Unimed Privacy Pro - Health Monitor
+ * Victor Ladislau Viana Privacy Pro - Health Monitor
  * Performs lightweight technical state verification for the popup interface.
  *
  * SECURITY & PRIVACY NOTICE:
@@ -11,7 +11,7 @@
   if (typeof module === 'object' && module.exports) {
     module.exports = factory();
   } else {
-    root.UnimedHealthMonitor = factory();
+    root.HealthMonitor = factory();
   }
 })(typeof self !== 'undefined' ? self : this, function () {
   'use strict';

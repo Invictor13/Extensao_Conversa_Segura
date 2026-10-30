@@ -1,5 +1,5 @@
 /**
- * Unimed Privacy Pro - WhatsApp Integration
+ * Victor Ladislau Viana Privacy Pro - WhatsApp Integration
  * Centralizes DOM selectors for WhatsApp Web components and manages visual CSS obfuscation.
  *
  * SECURITY & PRIVACY NOTICE:
@@ -12,7 +12,7 @@
   if (typeof module === 'object' && module.exports) {
     module.exports = factory();
   } else {
-    root.UnimedWhatsAppIntegration = factory();
+    root.WhatsAppIntegration = factory();
   }
 })(typeof self !== 'undefined' ? self : this, function () {
   'use strict';
@@ -101,11 +101,11 @@
     const body = document.body;
     if (!body) return;
 
-    toggleBodyClass('unimed-hide-messages', !!settings.hideMessages);
-    toggleBodyClass('unimed-hide-previews', !!settings.hidePreviews);
-    toggleBodyClass('unimed-hide-names', !!settings.hideNames);
-    toggleBodyClass('unimed-hide-photos', !!settings.hidePhotos);
-    toggleBodyClass('unimed-hide-media', !!settings.hideMedia);
+    toggleBodyClass('vlv-hide-messages', !!settings.hideMessages);
+    toggleBodyClass('vlv-hide-previews', !!settings.hidePreviews);
+    toggleBodyClass('vlv-hide-names', !!settings.hideNames);
+    toggleBodyClass('vlv-hide-photos', !!settings.hidePhotos);
+    toggleBodyClass('vlv-hide-media', !!settings.hideMedia);
   }
 
   function toggleBodyClass(className, condition) {

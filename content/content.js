@@ -1,5 +1,5 @@
 /**
- * Unimed Privacy Pro - Content Script Entry Point
+ * Victor Ladislau Viana Privacy Pro - Content Script Entry Point
  * Initializes and coordinates SettingsManager, WhatsAppIntegration,
  * PrivacyEngine, and VisualEngine on web.whatsapp.com.
  */
@@ -7,13 +7,13 @@
 (function () {
   'use strict';
 
-  const SettingsManager = window.UnimedSettingsManager;
-  const WhatsAppIntegration = window.UnimedWhatsAppIntegration;
-  const PrivacyEngine = window.UnimedPrivacyEngine;
-  const VisualEngine = window.UnimedVisualEngine;
+  const SettingsManager = window.SettingsManager;
+  const WhatsAppIntegration = window.WhatsAppIntegration;
+  const PrivacyEngine = window.PrivacyEngine;
+  const VisualEngine = window.VisualEngine;
 
   if (!SettingsManager || !WhatsAppIntegration) {
-    console.warn('[Unimed Privacy] Required extension modules not loaded.');
+    console.warn('[Privacy Pro] Required extension modules not loaded.');
     return;
   }
 

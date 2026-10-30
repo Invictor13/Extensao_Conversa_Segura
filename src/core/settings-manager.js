@@ -1,5 +1,5 @@
 /**
- * Unimed Privacy Pro - Settings Manager
+ * Victor Ladislau Viana Privacy Pro - Settings Manager
  * Manages configuration reading, writing, schema validation, and fallback state.
  * Strictly uses chrome.storage.local for corporate security & LGPD compliance.
  */
@@ -8,7 +8,7 @@
   if (typeof module === 'object' && module.exports) {
     module.exports = factory();
   } else {
-    root.UnimedSettingsManager = factory();
+    root.SettingsManager = factory();
   }
 })(typeof self !== 'undefined' ? self : this, function () {
   'use strict';
@@ -188,7 +188,7 @@
           chrome.storage.local.get(null, function (items) {
             try {
               if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.lastError) {
-                console.warn('[Unimed Privacy] Storage access error, using default settings.', chrome.runtime.lastError);
+                console.warn('[Privacy Pro] Storage access error, using default settings.', chrome.runtime.lastError);
                 if (callback) callback(sanitizeSettings(DEFAULT_SETTINGS));
                 return;
               }
@@ -228,7 +228,7 @@
                 chrome.storage.local.set(payloadToSave, function () {
                   try {
                     if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.lastError) {
-                      console.error('[Unimed Privacy] Storage write error:', chrome.runtime.lastError);
+                      console.error('[Privacy Pro] Storage write error:', chrome.runtime.lastError);
                       if (callback) callback(null, chrome.runtime.lastError);
                       resolve();
                       return;
@@ -257,7 +257,7 @@
           });
         });
       }).catch((err) => {
-        console.error('[Unimed Privacy] Write queue error:', err);
+        console.error('[Privacy Pro] Write queue error:', err);
       });
     },
 
@@ -291,11 +291,11 @@
                 listener(updated, changes);
               }
             } catch (e) {
-              console.warn('[Unimed Privacy] Error handling storage change:', e);
+              console.warn('[Privacy Pro] Error handling storage change:', e);
             }
           });
         } catch (e) {
-          console.warn('[Unimed Privacy] Could not add storage change listener:', e);
+          console.warn('[Privacy Pro] Could not add storage change listener:', e);
         }
       }
     }
