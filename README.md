@@ -1,7 +1,25 @@
-# VICTOR LADISLAU VIANA PRIVACY PRO — Documentação & Relatório de Segurança
+# Tela Privada — Proteção visual para WhatsApp Web
 
-## Visão Geral
-O **VICTOR LADISLAU VIANA PRIVACY PRO** é uma extensão de navegador para o WhatsApp Web (`web.whatsapp.com`), projetada para proteção de privacidade de tela e privacidade visual com rigorosos padrões de segurança da informação (SecOps) e conformidade com a Lei Geral de Proteção de Dados (LGPD).
+Extensão de navegador (Manifest V3) para WhatsApp Web (`web.whatsapp.com`), projetada para oferecer proteção de privacidade visual e de tela contra olhares curiosos e espectadores em ambientes compartilhados.
+
+---
+
+## Autoria & Propriedade
+
+Desenvolvido e de propriedade de **Victor Ladislau Viana**.
+
+- **GitHub:** [https://github.com/Invictor13](https://github.com/Invictor13)
+- **LinkedIn:** [https://www.linkedin.com/in/victor-ladislau-14402a170/](https://www.linkedin.com/in/victor-ladislau-14402a170/)
+
+---
+
+## Aviso Importante sobre Escopo e Limitações (Disclaimer)
+
+O **Tela Privada** é uma ferramenta estritamente focada em **proteção visual de tela** via CSS local:
+- **Não fornece criptografia adicional** além da já oferecida pela própria plataforma WhatsApp.
+- **Não detecta nem remove spywares, malwares ou softwares maliciosos**.
+- **Não impede capturas de tela (screenshots) nem gravações** realizadas pelo sistema operacional ou por softwares instalados no dispositivo.
+- **Não realiza extração nem monitoramento** de dados ou mensagens dos usuários. Toda a operação é executada localmente no navegador, sem telemetria nem comunicação externa.
 
 ---
 
@@ -30,7 +48,7 @@ O **VICTOR LADISLAU VIANA PRIVACY PRO** é uma extensão de navegador para o Wha
 
 ---
 
-## Matriz de Conformidade Corporativa & Risco
+## Resumo de Privacidade & Permissões
 
 | Módulo | Finalidade | Permissões | Dados Acessados | Comunicação Externa | Risco |
 | :--- | :--- | :--- | :--- | :--- | :--- |
@@ -43,6 +61,7 @@ O **VICTOR LADISLAU VIANA PRIVACY PRO** é uma extensão de navegador para o Wha
 ---
 
 ## Atalhos e Instalação
+
 - **Atalho de Emergência:** `Alt + Q` (Ativa Proteção Máxima instantaneamente).
 - **Instalação Local no Chrome:**
   1. Acesse `chrome://extensions/`.
