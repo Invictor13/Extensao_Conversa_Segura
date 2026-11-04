@@ -1,4 +1,4 @@
-/* Victor Ladislau Viana Privacy Pro - Corporate Theme Popup Styles */
+/* Tela Privada - Popup Styles */
 
 :root {
   --bg-body: #F4F6F8;
@@ -336,14 +336,56 @@ input:checked + .slider:before {
   color: var(--vlv-green);
 }
 
-/* Footer Frame - Green Highlight Layer */
-.footer {
+/* Seção Sobre / Footer Integrado */
+.about-section {
   padding: 6px 10px;
   text-align: center;
   font-size: 11px;
-  font-weight: 600;
   color: #FFFFFF;
   border-top: 2px solid var(--vlv-green-dark);
   background: linear-gradient(135deg, var(--vlv-green-dark) 0%, #005C38 100%);
-  letter-spacing: 0.3px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  align-items: center;
+}
+
+.about-text {
+  font-size: 10.5px;
+  letter-spacing: 0.2px;
+  opacity: 0.95;
+}
+
+.about-links {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.about-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: #E6F5F0;
+  text-decoration: none;
+  font-size: 10.5px;
+  font-weight: 600;
+  padding: 1px 4px;
+  border-radius: var(--radius-sm);
+  transition: all 0.2s ease;
+}
+
+.about-link:hover {
+  color: #FFFFFF;
+  background-color: rgba(255, 255, 255, 0.15);
+  text-decoration: underline;
+}
+
+.about-link svg {
+  flex-shrink: 0;
+}
+
+.about-divider {
+  color: #A3E0C9;
+  font-size: 10px;
 }

@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Privacidade WhatsApp - Victor Ladislau Viana",
+  "name": "Tela Privada",
   "version": "2.0.0",
-  "description": "Extensão de proteção visual e privacidade de tela para WhatsApp Web por Victor Ladislau Viana.",
+  "description": "Proteção visual para WhatsApp Web, desenvolvida por Victor Ladislau Viana.",
   "permissions": [
     "storage"
   ],
