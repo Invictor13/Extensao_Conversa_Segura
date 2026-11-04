@@ -1,5 +1,5 @@
 /**
- * Unimed Privacy Pro - Visual Engine
+ * Victor Ladislau Viana Privacy Pro - Visual Engine
  * Handles Canvas particles effect (pauses on tab inactive & prefers-reduced-motion).
  */
 
@@ -7,7 +7,7 @@
   if (typeof module === 'object' && module.exports) {
     module.exports = factory();
   } else {
-    root.UnimedVisualEngine = factory();
+    root.VisualEngine = factory();
   }
 })(typeof self !== 'undefined' ? self : this, function () {
   'use strict';
@@ -56,7 +56,7 @@
 
     if (!canvas) {
       canvas = document.createElement('canvas');
-      canvas.id = 'unimed-particle-canvas';
+      canvas.id = 'vlv-particle-canvas';
       canvas.style.cssText = `
         position: fixed;
         top: 0;
@@ -141,6 +141,7 @@
 
 
   return {
-    init
+    init,
+    updateState
   };
 });

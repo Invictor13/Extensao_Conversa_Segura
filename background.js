@@ -1,5 +1,5 @@
 /**
- * Unimed Privacy Pro - Background Service Worker
+ * Victor Ladislau Viana Privacy Pro - Background Service Worker
  * Secure, offline background handler for emergency shortcuts and extension lifecycle.
  * Strictly uses chrome.storage.local (no remote calls, zero telemetry).
  */
@@ -24,12 +24,12 @@ chrome.runtime.onInstalled.addListener(() => {
       chrome.storage.local.set(initialized);
     });
   } catch (e) {
-    console.warn('[Unimed Privacy] Install listener error:', e);
+    console.warn('[Privacy Pro] Install listener error:', e);
   }
 });
 
 // Emergency Panic Shortcut (Alt+Q)
-// For security and corporate safety, Alt+Q ALWAYS forces Maximum Emergency Protection.
+// For security and safety, Alt+Q ALWAYS forces Maximum Emergency Protection.
 // Disabling protection requires an explicit user action inside the popup interface.
 chrome.commands.onCommand.addListener((command) => {
   if (command === 'toggle-panic') {
@@ -45,7 +45,7 @@ chrome.commands.onCommand.addListener((command) => {
         lastUpdated: Date.now()
       });
     } catch (e) {
-      console.warn('[Unimed Privacy] Panic command error:', e);
+      console.warn('[Privacy Pro] Panic command error:', e);
     }
   }
 });

@@ -1,13 +1,13 @@
 /**
- * Unimed Privacy Pro - Popup Controller
+ * Victor Ladislau Viana Privacy Pro - Popup Controller
  * Connects UI controls to SettingsManager and HealthMonitor.
  */
 
 document.addEventListener('DOMContentLoaded', () => {
-  const SettingsManager = window.UnimedSettingsManager;
+  const SettingsManager = window.SettingsManager;
 
   if (!SettingsManager) {
-    console.error('[Unimed Privacy] SettingsManager module missing.');
+    console.error('[Privacy Pro] SettingsManager module missing.');
     return;
   }
 

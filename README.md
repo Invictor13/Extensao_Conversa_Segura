@@ -1,7 +1,7 @@
-# UNIMED PRIVACY PRO — Documentação & Relatório de Segurança Corporativa
+# VICTOR LADISLAU VIANA PRIVACY PRO — Documentação & Relatório de Segurança
 
 ## Visão Geral
-O **UNIMED PRIVACY PRO** é uma extensão de navegador de alto nível para o WhatsApp Web (`web.whatsapp.com`), projetada sob medida para ambientes corporativos que exigem rigorosos padrões de segurança da informação (SecOps) e conformidade com a Lei Geral de Proteção de Dados (LGPD).
+O **VICTOR LADISLAU VIANA PRIVACY PRO** é uma extensão de navegador para o WhatsApp Web (`web.whatsapp.com`), projetada para proteção de privacidade de tela e privacidade visual com rigorosos padrões de segurança da informação (SecOps) e conformidade com a Lei Geral de Proteção de Dados (LGPD).
 
 ---
 

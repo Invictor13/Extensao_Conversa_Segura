@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Privacidade WhatsApp - Unimed Pro",
+  "name": "Privacidade WhatsApp - Victor Ladislau Viana",
   "version": "2.0.0",
-  "description": "Extensão corporativa de proteção visual e privacidade de tela para WhatsApp Web com estilo Unimed.",
+  "description": "Extensão de proteção visual e privacidade de tela para WhatsApp Web por Victor Ladislau Viana.",
   "permissions": [
     "storage"
   ],
