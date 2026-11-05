@@ -290,6 +290,182 @@ SettingsManager.applyPreset('basic', (basicSettings, basicErr) => {
           assert.strictEqual(finalSettings.hidePhotos, false);
           assert.strictEqual(finalSettings.hideNames, true);
           console.log('writeQueue serialization test PASSED!');
+
+          // 9. Parity & onInstalled Lifecycle Suite
+          console.log('9. Testing parity between background.js and SettingsManager.DEFAULT_SETTINGS...');
+          const fs = require('fs');
+          const vm = require('vm');
+          const path = require('path');
+
+          const bgSource = fs.readFileSync(path.join(__dirname, '../background.js'), 'utf8');
+
+          let capturedOnInstalledListener = null;
+          let capturedOnCommandListener = null;
+          let bgStorage = {};
+
+          const bgContext = {
+            console: {
+              log: () => {},
+              warn: () => {},
+              error: () => {}
+            },
+            Date: Date,
+            chrome: {
+              runtime: {
+                lastError: null,
+                onInstalled: {
+                  addListener: (fn) => { capturedOnInstalledListener = fn; }
+                }
+              },
+              commands: {
+                onCommand: {
+                  addListener: (fn) => { capturedOnCommandListener = fn; }
+                }
+              },
+              storage: {
+                local: {
+                  get: (keys, cb) => {
+                    if (bgContext.chrome.runtime.lastError) {
+                      cb(null);
+                    } else {
+                      cb({ ...bgStorage });
+                    }
+                  },
+                  set: (items, cb) => {
+                    if (!bgContext.chrome.runtime.lastError) {
+                      Object.assign(bgStorage, items);
+                    }
+                    if (cb) cb();
+                  }
+                }
+              }
+            }
+          };
+
+          // Execute background.js in isolated sandbox and extract DEFAULT_SETTINGS
+          vm.createContext(bgContext);
+          vm.runInContext(bgSource + '\n;globalThis.extractedBGDefaults = DEFAULT_SETTINGS;', bgContext);
+          const bgDefaults = bgContext.extractedBGDefaults;
+
+          assert.strictEqual(typeof bgDefaults, 'object');
+          assert.strictEqual(bgDefaults.protectionLevel, 'advanced');
+          assert.strictEqual(bgDefaults.hideMessages, SettingsManager.DEFAULT_SETTINGS.hideMessages);
+          assert.strictEqual(bgDefaults.hidePreviews, SettingsManager.DEFAULT_SETTINGS.hidePreviews);
+          assert.strictEqual(bgDefaults.hideNames, SettingsManager.DEFAULT_SETTINGS.hideNames);
+          assert.strictEqual(bgDefaults.hidePhotos, SettingsManager.DEFAULT_SETTINGS.hidePhotos);
+          assert.strictEqual(bgDefaults.hideMedia, SettingsManager.DEFAULT_SETTINGS.hideMedia);
+          assert.strictEqual(bgDefaults.particleEffect, SettingsManager.DEFAULT_SETTINGS.particleEffect);
+          assert.strictEqual(bgDefaults.panicTriggered, SettingsManager.DEFAULT_SETTINGS.panicTriggered);
+          assert.strictEqual(bgDefaults.panicBackupSettings, SettingsManager.DEFAULT_SETTINGS.panicBackupSettings);
+          assert.strictEqual(typeof bgDefaults.lastUpdated, 'number');
+          assert.strictEqual(typeof SettingsManager.DEFAULT_SETTINGS.lastUpdated, 'number');
+          console.log('Background & SettingsManager defaults parity test PASSED!');
+
+          console.log('10. Testing onInstalled lifecycle: storage error handling...');
+          bgStorage = { preserveMe: 123 };
+          bgContext.chrome.runtime.lastError = { message: 'Read failure' };
+          let setCalledOnError = false;
+          const origSet = bgContext.chrome.storage.local.set;
+          bgContext.chrome.storage.local.set = function () {
+            setCalledOnError = true;
+          };
+          capturedOnInstalledListener({ reason: 'install' });
+          assert.strictEqual(setCalledOnError, false, 'Storage write should never occur on read error');
+          assert.strictEqual(bgStorage.preserveMe, 123);
+          bgContext.chrome.storage.local.set = origSet;
+          bgContext.chrome.runtime.lastError = null;
+          console.log('Storage error handling during onInstalled test PASSED!');
+
+          console.log('11. Testing onInstalled lifecycle: fresh install with empty storage starts in Advanced...');
+          bgStorage = {};
+          capturedOnInstalledListener({ reason: 'install' });
+          assert.strictEqual(bgStorage.protectionLevel, 'advanced');
+          assert.strictEqual(bgStorage.hideMessages, true);
+          assert.strictEqual(bgStorage.hidePreviews, true);
+          assert.strictEqual(bgStorage.hideNames, false);
+          assert.strictEqual(bgStorage.hidePhotos, false);
+          assert.strictEqual(bgStorage.hideMedia, true);
+          assert.strictEqual(SettingsManager.detectPreset(bgStorage), 'advanced');
+          console.log('Fresh install starts in Advanced test PASSED!');
+
+          console.log('12. Testing onInstalled lifecycle: update preserves Basic preset...');
+          bgStorage = {
+            protectionLevel: 'basic',
+            hideMessages: true,
+            hidePreviews: true,
+            hideNames: false,
+            hidePhotos: false,
+            hideMedia: false,
+            particleEffect: false
+          };
+          capturedOnInstalledListener({ reason: 'update' });
+          assert.strictEqual(bgStorage.protectionLevel, 'basic');
+          assert.strictEqual(bgStorage.hideMedia, false);
+          assert.strictEqual(bgStorage.particleEffect, false);
+          assert.strictEqual(SettingsManager.detectPreset(bgStorage), 'basic');
+          console.log('Update preserves Basic preset test PASSED!');
+
+          console.log('13. Testing onInstalled lifecycle: update preserves Maximum preset...');
+          bgStorage = {
+            protectionLevel: 'maximum',
+            hideMessages: true,
+            hidePreviews: true,
+            hideNames: true,
+            hidePhotos: true,
+            hideMedia: true,
+            particleEffect: true
+          };
+          capturedOnInstalledListener({ reason: 'update' });
+          assert.strictEqual(bgStorage.protectionLevel, 'maximum');
+          assert.strictEqual(bgStorage.hideNames, true);
+          assert.strictEqual(bgStorage.hidePhotos, true);
+          assert.strictEqual(SettingsManager.detectPreset(bgStorage), 'maximum');
+          console.log('Update preserves Maximum preset test PASSED!');
+
+          console.log('14. Testing onInstalled lifecycle: update preserves Custom settings & unrecognized data...');
+          bgStorage = {
+            protectionLevel: 'custom',
+            hideMessages: true,
+            hidePreviews: false,
+            hideNames: true,
+            hidePhotos: false,
+            hideMedia: false,
+            particleEffect: true,
+            userNotes: 'preserve-extra-keys',
+            futureVersionFlag: 42
+          };
+          capturedOnInstalledListener({ reason: 'update' });
+          assert.strictEqual(bgStorage.hidePreviews, false);
+          assert.strictEqual(bgStorage.hideNames, true);
+          assert.strictEqual(bgStorage.userNotes, 'preserve-extra-keys');
+          assert.strictEqual(bgStorage.futureVersionFlag, 42);
+          assert.strictEqual(SettingsManager.detectPreset(bgStorage), 'custom');
+          console.log('Update preserves Custom and extra keys test PASSED!');
+
+          console.log('15. Testing onInstalled lifecycle: update writes ONLY missing keys...');
+          bgStorage = {
+            protectionLevel: 'advanced',
+            hideMessages: true,
+            hidePreviews: true,
+            hideNames: false,
+            hidePhotos: false,
+            hideMedia: true
+            // Missing particleEffect, panicTriggered, panicBackupSettings
+          };
+          let writtenKeys = [];
+          bgContext.chrome.storage.local.set = function (items, cb) {
+            writtenKeys = Object.keys(items);
+            Object.assign(bgStorage, items);
+            if (cb) cb();
+          };
+          capturedOnInstalledListener({ reason: 'update' });
+          assert.strictEqual(writtenKeys.includes('hideMessages'), false, 'Existing key should not be re-written');
+          assert.strictEqual(writtenKeys.includes('hideNames'), false, 'Existing key should not be re-written');
+          assert.strictEqual(writtenKeys.includes('particleEffect'), true, 'Missing key should be written');
+          assert.strictEqual(writtenKeys.includes('panicTriggered'), true, 'Missing key should be written');
+          assert.strictEqual(writtenKeys.includes('panicBackupSettings'), true, 'Missing key should be written');
+          console.log('Missing-keys-only update test PASSED!');
+
           console.log('All automated tests executed successfully!');
         });
       });
