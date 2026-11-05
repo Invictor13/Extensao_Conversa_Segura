@@ -361,69 +361,111 @@ SettingsManager.applyPreset('basic', (basicSettings, basicErr) => {
           assert.strictEqual(typeof SettingsManager.DEFAULT_SETTINGS.lastUpdated, 'number');
           console.log('Background & SettingsManager defaults parity test PASSED!');
 
-          console.log('10. Testing onInstalled lifecycle: storage error handling...');
-          bgStorage = { preserveMe: 123 };
+          // Test helper for spy tracking on bgContext.chrome.storage.local.set
+          let setCalls = [];
+          function resetStorageSpy(initialData = {}) {
+            bgStorage = { ...initialData };
+            setCalls = [];
+            bgContext.chrome.runtime.lastError = null;
+            bgContext.chrome.storage.local.set = function (items, cb) {
+              setCalls.push(JSON.parse(JSON.stringify(items)));
+              if (!bgContext.chrome.runtime.lastError) {
+                Object.assign(bgStorage, items);
+              }
+              if (cb) cb();
+            };
+          }
+
+          console.log('10. Testing onInstalled lifecycle: storage read error handling (0 set calls)...');
+          resetStorageSpy({ preserveMe: 123 });
           bgContext.chrome.runtime.lastError = { message: 'Read failure' };
-          let setCalledOnError = false;
-          const origSet = bgContext.chrome.storage.local.set;
-          bgContext.chrome.storage.local.set = function () {
-            setCalledOnError = true;
-          };
           capturedOnInstalledListener({ reason: 'install' });
-          assert.strictEqual(setCalledOnError, false, 'Storage write should never occur on read error');
-          assert.strictEqual(bgStorage.preserveMe, 123);
-          bgContext.chrome.storage.local.set = origSet;
+          assert.strictEqual(setCalls.length, 0, 'Storage write should never occur on read error');
+          assert.strictEqual(bgStorage.preserveMe, 123, 'Existing storage must remain intact on read error');
           bgContext.chrome.runtime.lastError = null;
-          console.log('Storage error handling during onInstalled test PASSED!');
+          console.log('Storage read error handling during onInstalled test PASSED!');
+
+          console.log('10b. Testing onInstalled lifecycle: invalid non-object read response (0 set calls)...');
+          resetStorageSpy({ preserveMe: 456 });
+          const origGet = bgContext.chrome.storage.local.get;
+          // Test null response
+          bgContext.chrome.storage.local.get = (keys, cb) => cb(null);
+          capturedOnInstalledListener({ reason: 'install' });
+          assert.strictEqual(setCalls.length, 0, 'Storage write should never occur when get returns null');
+          assert.strictEqual(bgStorage.preserveMe, 456);
+
+          // Test array response
+          bgContext.chrome.storage.local.get = (keys, cb) => cb([1, 2, 3]);
+          capturedOnInstalledListener({ reason: 'install' });
+          assert.strictEqual(setCalls.length, 0, 'Storage write should never occur when get returns array');
+          assert.strictEqual(bgStorage.preserveMe, 456);
+          bgContext.chrome.storage.local.get = origGet;
+          console.log('Invalid non-object storage read response test PASSED!');
 
           console.log('11. Testing onInstalled lifecycle: fresh install with empty storage starts in Advanced...');
-          bgStorage = {};
+          resetStorageSpy({});
           capturedOnInstalledListener({ reason: 'install' });
-          assert.strictEqual(bgStorage.protectionLevel, 'advanced');
-          assert.strictEqual(bgStorage.hideMessages, true);
-          assert.strictEqual(bgStorage.hidePreviews, true);
-          assert.strictEqual(bgStorage.hideNames, false);
-          assert.strictEqual(bgStorage.hidePhotos, false);
-          assert.strictEqual(bgStorage.hideMedia, true);
+          assert.strictEqual(setCalls.length, 1, 'Exactly one set call must occur on empty storage');
+          const freshPayload = setCalls[0];
+          assert.strictEqual(freshPayload.protectionLevel, 'advanced');
+          assert.strictEqual(freshPayload.hideMessages, true);
+          assert.strictEqual(freshPayload.hidePreviews, true);
+          assert.strictEqual(freshPayload.hideNames, false);
+          assert.strictEqual(freshPayload.hidePhotos, false);
+          assert.strictEqual(freshPayload.hideMedia, true);
+          assert.strictEqual(freshPayload.particleEffect, true);
+          assert.strictEqual(freshPayload.panicTriggered, false);
+          assert.strictEqual(freshPayload.panicBackupSettings, null);
+          assert.strictEqual(typeof freshPayload.lastUpdated, 'number');
           assert.strictEqual(SettingsManager.detectPreset(bgStorage), 'advanced');
           console.log('Fresh install starts in Advanced test PASSED!');
 
-          console.log('12. Testing onInstalled lifecycle: update preserves Basic preset...');
-          bgStorage = {
+          console.log('12. Testing onInstalled lifecycle: update preserves Basic preset (0 writes when complete)...');
+          resetStorageSpy({
             protectionLevel: 'basic',
             hideMessages: true,
             hidePreviews: true,
             hideNames: false,
             hidePhotos: false,
             hideMedia: false,
-            particleEffect: false
-          };
+            particleEffect: false,
+            panicTriggered: false,
+            panicBackupSettings: null,
+            lastUpdated: 1600000000000
+          });
           capturedOnInstalledListener({ reason: 'update' });
+          assert.strictEqual(setCalls.length, 0, 'No set call should occur when all settings already exist');
           assert.strictEqual(bgStorage.protectionLevel, 'basic');
           assert.strictEqual(bgStorage.hideMedia, false);
           assert.strictEqual(bgStorage.particleEffect, false);
+          assert.strictEqual(bgStorage.lastUpdated, 1600000000000);
           assert.strictEqual(SettingsManager.detectPreset(bgStorage), 'basic');
           console.log('Update preserves Basic preset test PASSED!');
 
-          console.log('13. Testing onInstalled lifecycle: update preserves Maximum preset...');
-          bgStorage = {
+          console.log('13. Testing onInstalled lifecycle: update preserves Maximum preset (0 writes when complete)...');
+          resetStorageSpy({
             protectionLevel: 'maximum',
             hideMessages: true,
             hidePreviews: true,
             hideNames: true,
             hidePhotos: true,
             hideMedia: true,
-            particleEffect: true
-          };
+            particleEffect: true,
+            panicTriggered: false,
+            panicBackupSettings: null,
+            lastUpdated: 1650000000000
+          });
           capturedOnInstalledListener({ reason: 'update' });
+          assert.strictEqual(setCalls.length, 0, 'No set call should occur when all settings already exist');
           assert.strictEqual(bgStorage.protectionLevel, 'maximum');
           assert.strictEqual(bgStorage.hideNames, true);
           assert.strictEqual(bgStorage.hidePhotos, true);
+          assert.strictEqual(bgStorage.lastUpdated, 1650000000000);
           assert.strictEqual(SettingsManager.detectPreset(bgStorage), 'maximum');
           console.log('Update preserves Maximum preset test PASSED!');
 
           console.log('14. Testing onInstalled lifecycle: update preserves Custom settings & unrecognized data...');
-          bgStorage = {
+          resetStorageSpy({
             protectionLevel: 'custom',
             hideMessages: true,
             hidePreviews: false,
@@ -431,40 +473,140 @@ SettingsManager.applyPreset('basic', (basicSettings, basicErr) => {
             hidePhotos: false,
             hideMedia: false,
             particleEffect: true,
+            panicTriggered: false,
+            panicBackupSettings: null,
+            lastUpdated: 1670000000000,
             userNotes: 'preserve-extra-keys',
             futureVersionFlag: 42
-          };
+          });
           capturedOnInstalledListener({ reason: 'update' });
+          assert.strictEqual(setCalls.length, 0, 'No set call should occur when all known settings already exist');
           assert.strictEqual(bgStorage.hidePreviews, false);
           assert.strictEqual(bgStorage.hideNames, true);
           assert.strictEqual(bgStorage.userNotes, 'preserve-extra-keys');
           assert.strictEqual(bgStorage.futureVersionFlag, 42);
+          assert.strictEqual(bgStorage.lastUpdated, 1670000000000);
           assert.strictEqual(SettingsManager.detectPreset(bgStorage), 'custom');
           console.log('Update preserves Custom and extra keys test PASSED!');
 
           console.log('15. Testing onInstalled lifecycle: update writes ONLY missing keys...');
-          bgStorage = {
+          resetStorageSpy({
             protectionLevel: 'advanced',
             hideMessages: true,
             hidePreviews: true,
             hideNames: false,
             hidePhotos: false,
-            hideMedia: true
+            hideMedia: true,
+            lastUpdated: 1700000000000
             // Missing particleEffect, panicTriggered, panicBackupSettings
+          });
+          capturedOnInstalledListener({ reason: 'update' });
+          assert.strictEqual(setCalls.length, 1, 'Exactly one set call should occur for missing keys');
+          const missingPayload = setCalls[0];
+          assert.deepStrictEqual(Object.keys(missingPayload).sort(), ['panicBackupSettings', 'panicTriggered', 'particleEffect'].sort());
+          assert.strictEqual(missingPayload.particleEffect, true);
+          assert.strictEqual(missingPayload.panicTriggered, false);
+          assert.strictEqual(missingPayload.panicBackupSettings, null);
+          assert.strictEqual(missingPayload.lastUpdated, undefined, 'Existing lastUpdated must NOT be in payload');
+          assert.strictEqual(bgStorage.lastUpdated, 1700000000000, 'Existing lastUpdated must be preserved exactly');
+          console.log('Missing-keys-only update test PASSED!');
+
+          console.log('16. Testing onInstalled lifecycle: lastUpdated existing is strictly preserved...');
+          const fixedTimestamp = 1712345678901;
+          resetStorageSpy({
+            protectionLevel: 'basic',
+            hideMessages: true,
+            hidePreviews: true,
+            hideNames: false,
+            hidePhotos: false,
+            hideMedia: false,
+            lastUpdated: fixedTimestamp
+            // Missing particleEffect, panicTriggered, panicBackupSettings
+          });
+          capturedOnInstalledListener({ reason: 'update' });
+          assert.strictEqual(setCalls.length, 1);
+          assert.strictEqual(setCalls[0].lastUpdated, undefined, 'lastUpdated must not be in set payload when already existing');
+          assert.strictEqual(bgStorage.lastUpdated, fixedTimestamp, 'Stored lastUpdated timestamp must remain unchanged');
+          console.log('Existing lastUpdated strict preservation test PASSED!');
+
+          console.log('17. Testing onInstalled lifecycle: lastUpdated missing is populated with valid timestamp...');
+          const beforeTime = Date.now();
+          resetStorageSpy({
+            protectionLevel: 'advanced',
+            hideMessages: true,
+            hidePreviews: true,
+            hideNames: false,
+            hidePhotos: false,
+            hideMedia: true,
+            particleEffect: true,
+            panicTriggered: false,
+            panicBackupSettings: null
+            // lastUpdated is missing!
+          });
+          capturedOnInstalledListener({ reason: 'update' });
+          const afterTime = Date.now();
+          assert.strictEqual(setCalls.length, 1);
+          assert.deepStrictEqual(Object.keys(setCalls[0]), ['lastUpdated'], 'Payload must contain ONLY lastUpdated');
+          assert.strictEqual(typeof setCalls[0].lastUpdated, 'number');
+          assert.strictEqual(setCalls[0].lastUpdated >= beforeTime && setCalls[0].lastUpdated <= afterTime, true);
+          assert.strictEqual(bgStorage.lastUpdated, setCalls[0].lastUpdated);
+          console.log('Missing lastUpdated populated test PASSED!');
+
+          console.log('18. Testing onInstalled lifecycle: storage write error does not retry or corrupt storage...');
+          resetStorageSpy({
+            protectionLevel: 'advanced',
+            hideMessages: true,
+            hidePreviews: true,
+            hideNames: false,
+            hidePhotos: false,
+            hideMedia: true,
+            lastUpdated: 1700000000000
+            // missing particleEffect, panicTriggered, panicBackupSettings
+          });
+          let writeErrorLogged = false;
+          const origConsoleError = bgContext.console.error;
+          bgContext.console.error = function (...args) {
+            if (args[0] && args[0].includes('Erro ao preencher chaves ausentes')) {
+              writeErrorLogged = true;
+            }
           };
-          let writtenKeys = [];
+          // Intercept set to simulate runtime.lastError inside callback
           bgContext.chrome.storage.local.set = function (items, cb) {
-            writtenKeys = Object.keys(items);
-            Object.assign(bgStorage, items);
+            setCalls.push(JSON.parse(JSON.stringify(items)));
+            bgContext.chrome.runtime.lastError = { message: 'Write failure' };
             if (cb) cb();
+            bgContext.chrome.runtime.lastError = null;
           };
           capturedOnInstalledListener({ reason: 'update' });
-          assert.strictEqual(writtenKeys.includes('hideMessages'), false, 'Existing key should not be re-written');
-          assert.strictEqual(writtenKeys.includes('hideNames'), false, 'Existing key should not be re-written');
-          assert.strictEqual(writtenKeys.includes('particleEffect'), true, 'Missing key should be written');
-          assert.strictEqual(writtenKeys.includes('panicTriggered'), true, 'Missing key should be written');
-          assert.strictEqual(writtenKeys.includes('panicBackupSettings'), true, 'Missing key should be written');
-          console.log('Missing-keys-only update test PASSED!');
+          assert.strictEqual(setCalls.length, 1, 'Exactly one write attempt must occur with no retries');
+          assert.strictEqual(writeErrorLogged, true, 'Write error must be logged via console.error');
+          assert.strictEqual(bgStorage.lastUpdated, 1700000000000, 'Original storage data must remain intact');
+          bgContext.console.error = origConsoleError;
+          console.log('Storage write error resilience test PASSED!');
+
+          console.log('19. Testing onInstalled lifecycle: Alt+Q panic command behavior remains intact...');
+          resetStorageSpy({
+            protectionLevel: 'basic',
+            hideMessages: true,
+            hidePreviews: true,
+            hideNames: false,
+            hidePhotos: false,
+            hideMedia: false,
+            particleEffect: false,
+            panicTriggered: false,
+            panicBackupSettings: null,
+            lastUpdated: 1000
+          });
+          capturedOnCommandListener('toggle-panic');
+          assert.strictEqual(bgStorage.protectionLevel, 'maximum');
+          assert.strictEqual(bgStorage.hideMessages, true);
+          assert.strictEqual(bgStorage.hidePreviews, true);
+          assert.strictEqual(bgStorage.hideNames, true);
+          assert.strictEqual(bgStorage.hidePhotos, true);
+          assert.strictEqual(bgStorage.hideMedia, true);
+          assert.strictEqual(bgStorage.panicTriggered, true);
+          assert.strictEqual(bgStorage.lastUpdated > 1000, true);
+          console.log('Alt+Q panic command behavior test PASSED!');
 
           console.log('All automated tests executed successfully!');
         });
