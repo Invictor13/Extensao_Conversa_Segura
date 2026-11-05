@@ -235,6 +235,38 @@ assert.strictEqual(document.body.classList.contains('vlv-hide-photos'), true);
 assert.strictEqual(document.body.classList.contains('vlv-hide-media'), true);
 console.log('Independent filter toggling test PASSED!');
 
+console.log('6b. Testing independent media & photos filter toggling (PR03 media censorship coverage)...');
+// hideMedia = true, hidePhotos = false
+WhatsAppIntegration.applyClasses({
+  hideMessages: true,
+  hidePreviews: true,
+  hideNames: false,
+  hidePhotos: false,
+  hideMedia: true
+});
+assert.strictEqual(document.body.classList.contains('vlv-hide-media'), true);
+assert.strictEqual(document.body.classList.contains('vlv-hide-photos'), false);
+
+// hideMedia = false, hidePhotos = true
+WhatsAppIntegration.applyClasses({
+  hideMessages: true,
+  hidePreviews: true,
+  hideNames: false,
+  hidePhotos: true,
+  hideMedia: false
+});
+assert.strictEqual(document.body.classList.contains('vlv-hide-media'), false);
+assert.strictEqual(document.body.classList.contains('vlv-hide-photos'), true);
+
+// Verify that WhatsAppIntegration.SELECTORS.media contains expanded profile and modal selectors
+const mediaSelectors = WhatsAppIntegration.SELECTORS.media;
+assert.strictEqual(mediaSelectors.includes('#main [data-testid="msg-container"] img:not([src*="emoji"])'), true);
+assert.strictEqual(mediaSelectors.includes('div[role="region"] [data-testid="media-gallery"] img'), true);
+assert.strictEqual(mediaSelectors.includes('div[role="region"] div[role="grid"] img'), true);
+assert.strictEqual(mediaSelectors.includes('div[role="dialog"] img:not([data-testid="avatar-tile"]):not([data-testid="chat-avatar"])'), true);
+assert.strictEqual(mediaSelectors.includes('[data-testid="media-viewer"] img'), true);
+console.log('Independent media & photos filter toggling and SELECTORS.media test PASSED!');
+
 console.log('7. Testing SettingsManager.applyPreset for basic, advanced, and maximum sequentially...');
 SettingsManager.applyPreset('basic', (basicSettings, basicErr) => {
   assert.strictEqual(basicErr, null);
