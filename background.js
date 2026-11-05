@@ -22,8 +22,13 @@ chrome.runtime.onInstalled.addListener((details) => {
   try {
     chrome.storage.local.get(null, (existing) => {
       // Storage read failure must never be treated as empty storage
-      if (chrome.runtime.lastError || !existing || typeof existing !== 'object') {
-        console.warn('[Privacy Pro] Falha na leitura do storage durante onInstalled:', chrome.runtime.lastError);
+      if (chrome.runtime.lastError) {
+        console.error('[Privacy Pro] Erro na leitura do storage durante onInstalled:', chrome.runtime.lastError);
+        return;
+      }
+
+      if (!existing || typeof existing !== 'object' || Array.isArray(existing)) {
+        console.error('[Privacy Pro] Retorno inválido na leitura do storage durante onInstalled:', existing);
         return;
       }
 
@@ -41,12 +46,11 @@ chrome.runtime.onInstalled.addListener((details) => {
         const missingSettings = {};
         for (const [key, value] of Object.entries(DEFAULT_SETTINGS)) {
           if (!Object.prototype.hasOwnProperty.call(existing, key)) {
-            missingSettings[key] = value;
+            missingSettings[key] = key === 'lastUpdated' ? Date.now() : value;
           }
         }
 
         if (Object.keys(missingSettings).length > 0) {
-          missingSettings.lastUpdated = Date.now();
           chrome.storage.local.set(missingSettings, () => {
             if (chrome.runtime.lastError) {
               console.error('[Privacy Pro] Erro ao preencher chaves ausentes:', chrome.runtime.lastError);
