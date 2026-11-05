@@ -8,20 +8,52 @@ const DEFAULT_SETTINGS = {
   protectionLevel: 'advanced', // 'basic' | 'advanced' | 'maximum'
   hideMessages: true,
   hidePreviews: true,
-  hideNames: true,
-  hidePhotos: true,
+  hideNames: false,
+  hidePhotos: false,
   hideMedia: true,
   particleEffect: true,
+  panicTriggered: false,
+  panicBackupSettings: null,
   lastUpdated: Date.now()
 };
 
 // Initialize default settings on install or update if missing
-chrome.runtime.onInstalled.addListener(() => {
+chrome.runtime.onInstalled.addListener((details) => {
   try {
     chrome.storage.local.get(null, (existing) => {
-      if (chrome.runtime.lastError) return;
-      const initialized = { ...DEFAULT_SETTINGS, ...(existing || {}) };
-      chrome.storage.local.set(initialized);
+      // Storage read failure must never be treated as empty storage
+      if (chrome.runtime.lastError || !existing || typeof existing !== 'object') {
+        console.warn('[Privacy Pro] Falha na leitura do storage durante onInstalled:', chrome.runtime.lastError);
+        return;
+      }
+
+      const existingKeys = Object.keys(existing);
+
+      if (existingKeys.length === 0) {
+        // Completely empty storage: initialize with Advanced Protection defaults
+        chrome.storage.local.set({ ...DEFAULT_SETTINGS, lastUpdated: Date.now() }, () => {
+          if (chrome.runtime.lastError) {
+            console.error('[Privacy Pro] Erro ao gravar defaults iniciais:', chrome.runtime.lastError);
+          }
+        });
+      } else {
+        // Populated storage: identify and write ONLY missing keys
+        const missingSettings = {};
+        for (const [key, value] of Object.entries(DEFAULT_SETTINGS)) {
+          if (!Object.prototype.hasOwnProperty.call(existing, key)) {
+            missingSettings[key] = value;
+          }
+        }
+
+        if (Object.keys(missingSettings).length > 0) {
+          missingSettings.lastUpdated = Date.now();
+          chrome.storage.local.set(missingSettings, () => {
+            if (chrome.runtime.lastError) {
+              console.error('[Privacy Pro] Erro ao preencher chaves ausentes:', chrome.runtime.lastError);
+            }
+          });
+        }
+      }
     });
   } catch (e) {
     console.warn('[Privacy Pro] Install listener error:', e);
