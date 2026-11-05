@@ -33,16 +33,21 @@
       updateSettings(settings);
     });
 
-    settingsManager.onChanged(function (updatedSettings) {
-      updateSettings(updatedSettings);
+    // On storage change, always reload fully validated and sanitized settings
+    settingsManager.onChanged(function () {
+      settingsManager.get(function (settings) {
+        updateSettings(settings);
+      });
     });
   }
 
   /**
    * Updates base user settings and evaluates effective privacy state.
+   * Sanitizes input to avoid partial corrupted state.
    * @param {Object} newSettings
    */
   function updateSettings(newSettings) {
+    if (!newSettings || typeof newSettings !== 'object') return;
     currentSettings = { ...currentSettings, ...newSettings };
 
     if (currentSettings.panicTriggered) {

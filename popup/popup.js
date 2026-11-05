@@ -28,8 +28,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const panicBanner = document.getElementById('panicBanner');
   const exitPanicBtn = document.getElementById('exitPanicBtn');
+  const customBadge = document.getElementById('customBadge');
 
-  function updateUI(settings) {
+  function updateUI(settings, error) {
+    if (error) {
+      console.error('[Privacy Pro] Erro ao sincronizar configurações:', error);
+      return;
+    }
+    if (!settings || typeof settings !== 'object') return;
+
     toggleIds.forEach((id) => {
       const el = document.getElementById(id);
       if (el && typeof settings[id] === 'boolean') {
@@ -52,6 +59,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       }
     });
+
+    // Update custom preset badge visibility
+    if (customBadge) {
+      customBadge.style.display = settings.protectionLevel === 'custom' ? 'inline-block' : 'none';
+    }
   }
 
   // Load initial settings
