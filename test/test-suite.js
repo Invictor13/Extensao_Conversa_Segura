@@ -78,8 +78,13 @@ global.VisualEngine = VisualEngine;
 console.log('1. Testing SettingsManager schema sanitization & preset detection...');
 const defaultSanitized = SettingsManager.sanitizeSettings({});
 assert.strictEqual(defaultSanitized.hideMessages, true);
+assert.strictEqual(defaultSanitized.hidePreviews, true);
+assert.strictEqual(defaultSanitized.hideMedia, true);
+assert.strictEqual(defaultSanitized.hideNames, false);
+assert.strictEqual(defaultSanitized.hidePhotos, false);
 assert.strictEqual(defaultSanitized.protectionLevel, 'advanced');
 
+// Basic Preset detection
 assert.strictEqual(SettingsManager.detectPreset({
   hideMessages: true,
   hidePreviews: true,
@@ -88,14 +93,44 @@ assert.strictEqual(SettingsManager.detectPreset({
   hideMedia: false
 }), 'basic');
 
+// Advanced Preset detection (messages + previews + media)
 assert.strictEqual(SettingsManager.detectPreset({
-  protectionLevel: 'maximum',
+  hideMessages: true,
+  hidePreviews: true,
+  hideNames: false,
+  hidePhotos: false,
+  hideMedia: true
+}), 'advanced');
+
+// Maximum Preset detection (all 5 filters)
+assert.strictEqual(SettingsManager.detectPreset({
+  protectionLevel: 'arbitrary_legacy_value',
   hideMessages: true,
   hidePreviews: true,
   hideNames: true,
   hidePhotos: true,
   hideMedia: true
 }), 'maximum');
+
+// Custom Preset detection when unaligned with any standard preset
+assert.strictEqual(SettingsManager.detectPreset({
+  hideMessages: true,
+  hidePreviews: false,
+  hideNames: false,
+  hidePhotos: false,
+  hideMedia: false
+}), 'custom');
+
+assert.strictEqual(SettingsManager.detectPreset({
+  hideMessages: true,
+  hidePreviews: true,
+  hideNames: true,
+  hidePhotos: false,
+  hideMedia: true
+}), 'custom');
+
+assert.strictEqual(SettingsManager.detectPreset(null), 'custom');
+console.log('SettingsManager preset detection tests PASSED!');
 
 console.log('2. Testing PrivacyEngine evaluation & effective settings...');
 PrivacyEngine.updateSettings({
@@ -147,10 +182,24 @@ global.chrome = {
   runtime: oldRuntime,
   storage: {
     local: {
-      get: function (q, cb) { cb(mockStorage); },
-      set: function (i, cb) { if (cb) cb(); }
+      get: function (query, callback) {
+        callback({ ...mockStorage });
+      },
+      set: function (items, callback) {
+        const changes = {};
+        Object.keys(items).forEach((key) => {
+          changes[key] = { oldValue: mockStorage[key], newValue: items[key] };
+          mockStorage[key] = items[key];
+        });
+        if (callback) callback();
+        storageChangeListeners.forEach((l) => l(changes, 'local'));
+      }
     },
-    onChanged: { addListener: function () {} }
+    onChanged: {
+      addListener: function (listener) {
+        storageChangeListeners.push(listener);
+      }
+    }
   }
 };
 
@@ -186,4 +235,64 @@ assert.strictEqual(document.body.classList.contains('vlv-hide-photos'), true);
 assert.strictEqual(document.body.classList.contains('vlv-hide-media'), true);
 console.log('Independent filter toggling test PASSED!');
 
-console.log('All automated tests executed successfully!');
+console.log('7. Testing SettingsManager.applyPreset for basic, advanced, and maximum sequentially...');
+SettingsManager.applyPreset('basic', (basicSettings, basicErr) => {
+  assert.strictEqual(basicErr, null);
+  assert.strictEqual(basicSettings.protectionLevel, 'basic');
+  assert.strictEqual(basicSettings.hideMessages, true);
+  assert.strictEqual(basicSettings.hidePreviews, true);
+  assert.strictEqual(basicSettings.hideMedia, false);
+  assert.strictEqual(basicSettings.hideNames, false);
+  assert.strictEqual(basicSettings.hidePhotos, false);
+
+  SettingsManager.applyPreset('advanced', (advSettings, advErr) => {
+    assert.strictEqual(advErr, null);
+    assert.strictEqual(advSettings.protectionLevel, 'advanced');
+    assert.strictEqual(advSettings.hideMessages, true);
+    assert.strictEqual(advSettings.hidePreviews, true);
+    assert.strictEqual(advSettings.hideMedia, true);
+    assert.strictEqual(advSettings.hideNames, false);
+    assert.strictEqual(advSettings.hidePhotos, false);
+
+    SettingsManager.applyPreset('maximum', (maxSettings, maxErr) => {
+      assert.strictEqual(maxErr, null);
+      assert.strictEqual(maxSettings.protectionLevel, 'maximum');
+      assert.strictEqual(maxSettings.hideMessages, true);
+      assert.strictEqual(maxSettings.hidePreviews, true);
+      assert.strictEqual(maxSettings.hideMedia, true);
+      assert.strictEqual(maxSettings.hideNames, true);
+      assert.strictEqual(maxSettings.hidePhotos, true);
+      console.log('SettingsManager.applyPreset tests PASSED!');
+
+      console.log('8. Testing SettingsManager.set error handling and writeQueue concurrency...');
+      const originalSet = global.chrome.storage.local.set;
+
+      // Mock an isolated error during write
+      global.chrome.storage.local.set = function (items, callback) {
+        global.chrome.runtime.lastError = { message: 'Disk quota exceeded' };
+        if (callback) callback();
+        delete global.chrome.runtime.lastError;
+      };
+
+      SettingsManager.set({ hideMessages: false }, (settings, error) => {
+        assert.notStrictEqual(error, null);
+        assert.strictEqual(error.message, 'Disk quota exceeded');
+        console.log('Storage error handling test PASSED!');
+
+        // Restore normal storage set
+        global.chrome.storage.local.set = originalSet;
+
+        // Test concurrent serialization through writeQueue
+        SettingsManager.set({ hidePhotos: true });
+        SettingsManager.set({ hideNames: true });
+        SettingsManager.set({ hidePhotos: false }, (finalSettings, queueError) => {
+          assert.strictEqual(queueError, null);
+          assert.strictEqual(finalSettings.hidePhotos, false);
+          assert.strictEqual(finalSettings.hideNames, true);
+          console.log('writeQueue serialization test PASSED!');
+          console.log('All automated tests executed successfully!');
+        });
+      });
+    });
+  });
+});

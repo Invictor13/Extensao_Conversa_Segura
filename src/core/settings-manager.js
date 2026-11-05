@@ -17,24 +17,26 @@
     protectionLevel: 'advanced', // 'basic' | 'advanced' | 'maximum' | 'custom'
     hideMessages: true,
     hidePreviews: true,
-    hideNames: true,
-    hidePhotos: true,
+    hideNames: false,
+    hidePhotos: false,
     hideMedia: true,
     particleEffect: true,
     panicTriggered: false,
+    panicBackupSettings: null,
     lastUpdated: Date.now()
   };
 
   const VALID_LEVELS = ['basic', 'advanced', 'maximum', 'custom'];
 
   /**
-   * Evaluates if current filter values match a defined preset level.
+   * Evaluates if current filter values match a defined preset level deterministically.
+   * Does NOT rely on existing protectionLevel property.
    * Returns 'basic', 'advanced', 'maximum', or 'custom'.
    * @param {Object} settings
    * @returns {string}
    */
   function detectPreset(settings) {
-    if (!settings) return 'custom';
+    if (!settings || typeof settings !== 'object') return 'custom';
 
     const isBasic =
       settings.hideMessages === true &&
@@ -43,7 +45,14 @@
       settings.hidePhotos === false &&
       settings.hideMedia === false;
 
-    const isAllFiltersOn =
+    const isAdvanced =
+      settings.hideMessages === true &&
+      settings.hidePreviews === true &&
+      settings.hideNames === false &&
+      settings.hidePhotos === false &&
+      settings.hideMedia === true;
+
+    const isMaximum =
       settings.hideMessages === true &&
       settings.hidePreviews === true &&
       settings.hideNames === true &&
@@ -51,9 +60,8 @@
       settings.hideMedia === true;
 
     if (isBasic) return 'basic';
-    if (isAllFiltersOn) {
-      return settings.protectionLevel === 'maximum' ? 'maximum' : 'advanced';
-    }
+    if (isAdvanced) return 'advanced';
+    if (isMaximum) return 'maximum';
 
     return 'custom';
   }
@@ -78,6 +86,9 @@
     if (typeof input.hideMedia === 'boolean') sanitized.hideMedia = input.hideMedia;
     if (typeof input.particleEffect === 'boolean') sanitized.particleEffect = input.particleEffect;
     if (typeof input.panicTriggered === 'boolean') sanitized.panicTriggered = input.panicTriggered;
+    if (input.panicBackupSettings === null || (typeof input.panicBackupSettings === 'object' && input.panicBackupSettings !== null)) {
+      sanitized.panicBackupSettings = input.panicBackupSettings;
+    }
     if (typeof input.lastUpdated === 'number') sanitized.lastUpdated = input.lastUpdated;
 
     // Recalculate protection level dynamically
@@ -106,6 +117,9 @@
     if (typeof partialInput.hideMedia === 'boolean') sanitizedPartial.hideMedia = partialInput.hideMedia;
     if (typeof partialInput.particleEffect === 'boolean') sanitizedPartial.particleEffect = partialInput.particleEffect;
     if (typeof partialInput.panicTriggered === 'boolean') sanitizedPartial.panicTriggered = partialInput.panicTriggered;
+    if (partialInput.panicBackupSettings === null || (typeof partialInput.panicBackupSettings === 'object' && partialInput.panicBackupSettings !== null)) {
+      sanitizedPartial.panicBackupSettings = partialInput.panicBackupSettings;
+    }
 
     sanitizedPartial.lastUpdated = Date.now();
 
@@ -128,6 +142,15 @@
           hidePhotos: false,
           hideMedia: false
         };
+      case 'advanced':
+        return {
+          protectionLevel: 'advanced',
+          hideMessages: true,
+          hidePreviews: true,
+          hideNames: false,
+          hidePhotos: false,
+          hideMedia: true
+        };
       case 'maximum':
         return {
           protectionLevel: 'maximum',
@@ -137,16 +160,8 @@
           hidePhotos: true,
           hideMedia: true
         };
-      case 'advanced':
       default:
-        return {
-          protectionLevel: 'advanced',
-          hideMessages: true,
-          hidePreviews: true,
-          hideNames: true,
-          hidePhotos: true,
-          hideMedia: true
-        };
+        return getPresetSettings('advanced');
     }
   }
 
@@ -209,6 +224,8 @@
      * Save partial settings atomically to chrome.storage.local.
      * Uses a sequential queue to eliminate race conditions.
      * Recalculates protectionLevel based on current merged state.
+     * Never falsely reports success if storage write fails.
+     * Standardized callback signature: callback(settings, error).
      * @param {Object} partialSettings
      * @param {Function} [callback]
      */
@@ -227,31 +244,32 @@
               try {
                 chrome.storage.local.set(payloadToSave, function () {
                   try {
-                    if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.lastError) {
-                      console.error('[Privacy Pro] Storage write error:', chrome.runtime.lastError);
-                      if (callback) callback(null, chrome.runtime.lastError);
+                    const runtimeError = typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.lastError;
+                    if (runtimeError) {
+                      console.error('[Privacy Pro] Storage write error:', runtimeError);
+                      // Return current verified state and the error; do not pretend unpersisted changes succeeded
+                      if (callback) callback(current, runtimeError);
                       resolve();
                       return;
                     }
-                    chrome.storage.local.get(null, function (items) {
-                      const updated = sanitizeSettings(items);
-                      if (callback) callback(updated);
-                      resolve();
-                    });
+
+                    const finalSettings = sanitizeSettings({ ...current, ...payloadToSave });
+                    if (callback) callback(finalSettings, null);
+                    resolve();
                   } catch (e) {
-                    const updated = sanitizeSettings({ ...current, ...payloadToSave });
-                    if (callback) callback(updated);
+                    console.error('[Privacy Pro] Error in storage callback:', e);
+                    if (callback) callback(current, e);
                     resolve();
                   }
                 });
               } catch (e) {
-                const updated = sanitizeSettings({ ...current, ...payloadToSave });
-                if (callback) callback(updated);
+                console.error('[Privacy Pro] Storage set exception:', e);
+                if (callback) callback(current, e);
                 resolve();
               }
             } else {
-              const updated = sanitizeSettings({ ...current, ...payloadToSave });
-              if (callback) callback(updated);
+              const contextError = new Error('Extension context invalidated.');
+              if (callback) callback(current, contextError);
               resolve();
             }
           });
