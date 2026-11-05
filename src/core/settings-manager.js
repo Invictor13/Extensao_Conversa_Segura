@@ -28,6 +28,37 @@
 
   const VALID_LEVELS = ['basic', 'advanced', 'maximum', 'custom'];
 
+  const FILTER_KEYS = [
+    'hideMessages',
+    'hidePreviews',
+    'hideNames',
+    'hidePhotos',
+    'hideMedia'
+  ];
+
+  /**
+   * Validates if a snapshot is strictly valid and complete.
+   * Must contain all 5 privacy filters, particleEffect, and a valid protectionLevel.
+   * Types must be boolean for filters/particleEffect and string in VALID_LEVELS for protectionLevel.
+   * @param {any} snapshot
+   * @returns {boolean}
+   */
+  function validateSnapshot(snapshot) {
+    if (!snapshot || typeof snapshot !== 'object' || Array.isArray(snapshot)) {
+      return false;
+    }
+
+    if (typeof snapshot.hideMessages !== 'boolean') return false;
+    if (typeof snapshot.hidePreviews !== 'boolean') return false;
+    if (typeof snapshot.hideNames !== 'boolean') return false;
+    if (typeof snapshot.hidePhotos !== 'boolean') return false;
+    if (typeof snapshot.hideMedia !== 'boolean') return false;
+    if (typeof snapshot.particleEffect !== 'boolean') return false;
+    if (!VALID_LEVELS.includes(snapshot.protectionLevel)) return false;
+
+    return true;
+  }
+
   /**
    * Evaluates if current filter values match a defined preset level deterministically.
    * Does NOT rely on existing protectionLevel property.
@@ -188,6 +219,7 @@
   return {
     DEFAULT_SETTINGS,
     detectPreset,
+    validateSnapshot,
     sanitizeSettings,
     sanitizePartialSettings,
     getPresetSettings,
@@ -233,10 +265,26 @@
       writeQueue = writeQueue.then(() => {
         return new Promise((resolve) => {
           this.get((current) => {
-            const merged = { ...current, ...partialSettings };
+            // Check if user manually modified any privacy filter or preset during emergency
+            const hasManualFilterChange = FILTER_KEYS.some((key) => {
+              return Object.prototype.hasOwnProperty.call(partialSettings, key) &&
+                     partialSettings[key] !== current[key];
+            });
+            const hasPresetChange = Object.prototype.hasOwnProperty.call(partialSettings, 'protectionLevel') &&
+                                   partialSettings.protectionLevel !== current.protectionLevel;
+
+            // If in panic mode and user makes manual filter/preset change, end panic and discard snapshot
+            const overrides = {};
+            if ((hasManualFilterChange || hasPresetChange) && (current.panicTriggered || current.panicBackupSettings)) {
+              overrides.panicTriggered = false;
+              overrides.panicBackupSettings = null;
+            }
+
+            const merged = { ...current, ...partialSettings, ...overrides };
             const detectedLevel = detectPreset(merged);
             const payloadToSave = sanitizePartialSettings({
               ...partialSettings,
+              ...overrides,
               protectionLevel: detectedLevel
             });
 
@@ -287,6 +335,172 @@
     applyPreset: function (level, callback) {
       const preset = getPresetSettings(level);
       this.set(preset, callback);
+    },
+
+    /**
+     * Activates Maximum Emergency Protection (Alt+Q).
+     * Strictly idempotent: if panic is already triggered and a valid snapshot exists,
+     * it maintains the original snapshot and forces maximum protection without overwriting.
+     * Captures snapshot of previous functional state if not already in panic.
+     * @param {Function} [callback] Standard callback (settings, error)
+     */
+    activateEmergency: function (callback) {
+      writeQueue = writeQueue.then(() => {
+        return new Promise((resolve) => {
+          this.get((current) => {
+            const hasExistingSnapshot = validateSnapshot(current.panicBackupSettings);
+            let snapshotToKeep = current.panicBackupSettings;
+
+            // If not in panic or snapshot missing/invalid, capture fresh snapshot from current functional settings
+            if (!current.panicTriggered || !hasExistingSnapshot) {
+              snapshotToKeep = {
+                hideMessages: current.hideMessages,
+                hidePreviews: current.hidePreviews,
+                hideNames: current.hideNames,
+                hidePhotos: current.hidePhotos,
+                hideMedia: current.hideMedia,
+                particleEffect: current.particleEffect,
+                protectionLevel: detectPreset(current)
+              };
+            }
+
+            const payloadToSave = {
+              protectionLevel: 'maximum',
+              hideMessages: true,
+              hidePreviews: true,
+              hideNames: true,
+              hidePhotos: true,
+              hideMedia: true,
+              panicTriggered: true,
+              panicBackupSettings: snapshotToKeep,
+              lastUpdated: Date.now()
+            };
+
+            if (isContextValid()) {
+              try {
+                chrome.storage.local.set(payloadToSave, function () {
+                  try {
+                    const runtimeError = typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.lastError;
+                    if (runtimeError) {
+                      console.error('[Privacy Pro] Storage emergency write error:', runtimeError);
+                      if (callback) callback(current, runtimeError);
+                      resolve();
+                      return;
+                    }
+
+                    const finalSettings = sanitizeSettings({ ...current, ...payloadToSave });
+                    if (callback) callback(finalSettings, null);
+                    resolve();
+                  } catch (e) {
+                    console.error('[Privacy Pro] Error in activateEmergency callback:', e);
+                    if (callback) callback(current, e);
+                    resolve();
+                  }
+                });
+              } catch (e) {
+                console.error('[Privacy Pro] Storage activateEmergency exception:', e);
+                if (callback) callback(current, e);
+                resolve();
+              }
+            } else {
+              const contextError = new Error('Extension context invalidated.');
+              if (callback) callback(current, contextError);
+              resolve();
+            }
+          });
+        });
+      }).catch((err) => {
+        console.error('[Privacy Pro] Write queue error in activateEmergency:', err);
+      });
+    },
+
+    /**
+     * Restores previous functional settings from snapshot after emergency.
+     * Validates snapshot integrity strictly before restoring.
+     * If snapshot is invalid or missing, does NOT fall back automatically.
+     * Standardized callback signature: callback(settings, error).
+     * @param {Function} [callback]
+     */
+    restoreEmergency: function (callback) {
+      writeQueue = writeQueue.then(() => {
+        return new Promise((resolve) => {
+          this.get((current) => {
+            const snapshot = current.panicBackupSettings;
+
+            if (!validateSnapshot(snapshot)) {
+              const validationError = new Error('INVALID_SNAPSHOT');
+              validationError.code = 'INVALID_SNAPSHOT';
+              if (callback) callback(current, validationError);
+              resolve();
+              return;
+            }
+
+            const detectedLevel = detectPreset(snapshot);
+            const payloadToSave = {
+              hideMessages: snapshot.hideMessages,
+              hidePreviews: snapshot.hidePreviews,
+              hideNames: snapshot.hideNames,
+              hidePhotos: snapshot.hidePhotos,
+              hideMedia: snapshot.hideMedia,
+              particleEffect: snapshot.particleEffect,
+              protectionLevel: detectedLevel,
+              panicTriggered: false,
+              panicBackupSettings: null,
+              lastUpdated: Date.now()
+            };
+
+            if (isContextValid()) {
+              try {
+                chrome.storage.local.set(payloadToSave, function () {
+                  try {
+                    const runtimeError = typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.lastError;
+                    if (runtimeError) {
+                      console.error('[Privacy Pro] Storage restore error:', runtimeError);
+                      if (callback) callback(current, runtimeError);
+                      resolve();
+                      return;
+                    }
+
+                    const finalSettings = sanitizeSettings({ ...current, ...payloadToSave });
+                    if (callback) callback(finalSettings, null);
+                    resolve();
+                  } catch (e) {
+                    console.error('[Privacy Pro] Error in restoreEmergency callback:', e);
+                    if (callback) callback(current, e);
+                    resolve();
+                  }
+                });
+              } catch (e) {
+                console.error('[Privacy Pro] Storage restoreEmergency exception:', e);
+                if (callback) callback(current, e);
+                resolve();
+              }
+            } else {
+              const contextError = new Error('Extension context invalidated.');
+              if (callback) callback(current, contextError);
+              resolve();
+            }
+          });
+        });
+      }).catch((err) => {
+        console.error('[Privacy Pro] Write queue error in restoreEmergency:', err);
+      });
+    },
+
+    /**
+     * Explicit fallback recovery to Advanced Protection when snapshot is invalid/missing.
+     * Called only upon explicit user confirmation in the popup UI.
+     * @param {Function} [callback]
+     */
+    recoverEmergencyFallback: function (callback) {
+      const advancedPreset = getPresetSettings('advanced');
+      const payload = {
+        ...advancedPreset,
+        panicTriggered: false,
+        panicBackupSettings: null,
+        lastUpdated: Date.now()
+      };
+      this.set(payload, callback);
     },
 
     /**

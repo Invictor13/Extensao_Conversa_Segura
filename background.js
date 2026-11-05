@@ -4,6 +4,14 @@
  * Strictly uses chrome.storage.local (no remote calls, zero telemetry).
  */
 
+try {
+  if (typeof importScripts === 'function') {
+    importScripts('src/core/settings-manager.js');
+  }
+} catch (e) {
+  console.warn('[Privacy Pro] Could not import SettingsManager in Service Worker:', e);
+}
+
 const DEFAULT_SETTINGS = {
   protectionLevel: 'advanced', // 'basic' | 'advanced' | 'maximum'
   hideMessages: true,
@@ -70,16 +78,41 @@ chrome.runtime.onInstalled.addListener((details) => {
 chrome.commands.onCommand.addListener((command) => {
   if (command === 'toggle-panic') {
     try {
-      chrome.storage.local.set({
-        protectionLevel: 'maximum',
-        hideMessages: true,
-        hidePreviews: true,
-        hideNames: true,
-        hidePhotos: true,
-        hideMedia: true,
-        panicTriggered: true,
-        lastUpdated: Date.now()
-      });
+      const manager = typeof SettingsManager !== 'undefined' ? SettingsManager : (typeof self !== 'undefined' ? self.SettingsManager : null);
+      if (manager && typeof manager.activateEmergency === 'function') {
+        manager.activateEmergency((settings, err) => {
+          if (err) {
+            console.error('[Privacy Pro] Error activating emergency in background:', err);
+          }
+        });
+      } else {
+        // Fallback if SettingsManager failed to load in isolated context
+        chrome.storage.local.get(null, (existing) => {
+          if (chrome.runtime.lastError) return;
+          const current = (existing && typeof existing === 'object') ? existing : {};
+          const snapshot = (!current.panicTriggered || !current.panicBackupSettings) ? {
+            hideMessages: typeof current.hideMessages === 'boolean' ? current.hideMessages : true,
+            hidePreviews: typeof current.hidePreviews === 'boolean' ? current.hidePreviews : true,
+            hideNames: typeof current.hideNames === 'boolean' ? current.hideNames : false,
+            hidePhotos: typeof current.hidePhotos === 'boolean' ? current.hidePhotos : false,
+            hideMedia: typeof current.hideMedia === 'boolean' ? current.hideMedia : true,
+            particleEffect: typeof current.particleEffect === 'boolean' ? current.particleEffect : true,
+            protectionLevel: current.protectionLevel || 'advanced'
+          } : current.panicBackupSettings;
+
+          chrome.storage.local.set({
+            protectionLevel: 'maximum',
+            hideMessages: true,
+            hidePreviews: true,
+            hideNames: true,
+            hidePhotos: true,
+            hideMedia: true,
+            panicTriggered: true,
+            panicBackupSettings: snapshot,
+            lastUpdated: Date.now()
+          });
+        });
+      }
     } catch (e) {
       console.warn('[Privacy Pro] Panic command error:', e);
     }

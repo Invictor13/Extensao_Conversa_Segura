@@ -584,7 +584,7 @@ SettingsManager.applyPreset('basic', (basicSettings, basicErr) => {
           bgContext.console.error = origConsoleError;
           console.log('Storage write error resilience test PASSED!');
 
-          console.log('19. Testing onInstalled lifecycle: Alt+Q panic command behavior remains intact...');
+          console.log('19. Testing onInstalled lifecycle: Alt+Q panic command behavior remains intact & saves snapshot...');
           resetStorageSpy({
             protectionLevel: 'basic',
             hideMessages: true,
@@ -605,10 +605,188 @@ SettingsManager.applyPreset('basic', (basicSettings, basicErr) => {
           assert.strictEqual(bgStorage.hidePhotos, true);
           assert.strictEqual(bgStorage.hideMedia, true);
           assert.strictEqual(bgStorage.panicTriggered, true);
+          assert.notStrictEqual(bgStorage.panicBackupSettings, null, 'Snapshot must be captured');
+          assert.strictEqual(bgStorage.panicBackupSettings.protectionLevel, 'basic');
+          assert.strictEqual(bgStorage.panicBackupSettings.hideMedia, false);
+          assert.strictEqual(bgStorage.panicBackupSettings.particleEffect, false);
           assert.strictEqual(bgStorage.lastUpdated > 1000, true);
           console.log('Alt+Q panic command behavior test PASSED!');
 
-          console.log('All automated tests executed successfully!');
+          // 20. Resilient Emergency Lifecycle Suite (PR02.2)
+          console.log('20. Testing SettingsManager.validateSnapshot schema enforcement...');
+          assert.strictEqual(SettingsManager.validateSnapshot(null), false);
+          assert.strictEqual(SettingsManager.validateSnapshot([]), false);
+          assert.strictEqual(SettingsManager.validateSnapshot({}), false);
+          assert.strictEqual(SettingsManager.validateSnapshot({
+            hideMessages: true,
+            hidePreviews: true,
+            hideNames: false,
+            hidePhotos: false,
+            // missing hideMedia
+            particleEffect: true,
+            protectionLevel: 'advanced'
+          }), false);
+          assert.strictEqual(SettingsManager.validateSnapshot({
+            hideMessages: true,
+            hidePreviews: true,
+            hideNames: false,
+            hidePhotos: false,
+            hideMedia: 'true', // string instead of boolean
+            particleEffect: true,
+            protectionLevel: 'advanced'
+          }), false);
+          assert.strictEqual(SettingsManager.validateSnapshot({
+            hideMessages: true,
+            hidePreviews: true,
+            hideNames: false,
+            hidePhotos: false,
+            hideMedia: true,
+            particleEffect: true,
+            protectionLevel: 'invalid_level'
+          }), false);
+          assert.strictEqual(SettingsManager.validateSnapshot({
+            hideMessages: true,
+            hidePreviews: true,
+            hideNames: false,
+            hidePhotos: false,
+            hideMedia: false,
+            particleEffect: true,
+            protectionLevel: 'basic'
+          }), true);
+          console.log('SettingsManager.validateSnapshot tests PASSED!');
+
+          console.log('21. Testing activateEmergency from Basic and exact restoreEmergency...');
+          mockStorage = {
+            protectionLevel: 'basic',
+            hideMessages: true,
+            hidePreviews: true,
+            hideNames: false,
+            hidePhotos: false,
+            hideMedia: false,
+            particleEffect: false,
+            panicTriggered: false,
+            panicBackupSettings: null,
+            lastUpdated: 500
+          };
+
+          SettingsManager.activateEmergency((activeSettings, activeErr) => {
+            assert.strictEqual(activeErr, null);
+            assert.strictEqual(activeSettings.panicTriggered, true);
+            assert.strictEqual(activeSettings.protectionLevel, 'maximum');
+            assert.strictEqual(activeSettings.hideNames, true);
+            assert.strictEqual(activeSettings.hidePhotos, true);
+            assert.strictEqual(activeSettings.hideMedia, true);
+            assert.notStrictEqual(activeSettings.panicBackupSettings, null);
+            assert.strictEqual(activeSettings.panicBackupSettings.hideMedia, false);
+            assert.strictEqual(activeSettings.panicBackupSettings.particleEffect, false);
+            assert.strictEqual(activeSettings.panicBackupSettings.protectionLevel, 'basic');
+
+            // Test exact restoration
+            SettingsManager.restoreEmergency((restoredSettings, restoreErr) => {
+              assert.strictEqual(restoreErr, null);
+              assert.strictEqual(restoredSettings.panicTriggered, false);
+              assert.strictEqual(restoredSettings.panicBackupSettings, null);
+              assert.strictEqual(restoredSettings.protectionLevel, 'basic');
+              assert.strictEqual(restoredSettings.hideMessages, true);
+              assert.strictEqual(restoredSettings.hidePreviews, true);
+              assert.strictEqual(restoredSettings.hideMedia, false);
+              assert.strictEqual(restoredSettings.hideNames, false);
+              assert.strictEqual(restoredSettings.hidePhotos, false);
+              assert.strictEqual(restoredSettings.particleEffect, false);
+              assert.strictEqual(restoredSettings.lastUpdated > 500, true);
+              console.log('Basic preset activation and restore PASSED!');
+
+              console.log('22. Testing repeated Alt+Q (idempotency: snapshot preserved)...');
+              SettingsManager.activateEmergency((firstActive) => {
+                const initialSnapshot = { ...firstActive.panicBackupSettings };
+                // Call activateEmergency again while already in panic
+                SettingsManager.activateEmergency((secondActive) => {
+                  assert.strictEqual(secondActive.panicTriggered, true);
+                  assert.deepStrictEqual(secondActive.panicBackupSettings, initialSnapshot, 'Existing snapshot must be strictly preserved on repeated Alt+Q');
+                  console.log('Repeated Alt+Q idempotency test PASSED!');
+
+                  console.log('23. Testing manual filter modification during emergency discards snapshot...');
+                  // Modify hideNames manually
+                  SettingsManager.set({ hideNames: false }, (manualSettings) => {
+                    assert.strictEqual(manualSettings.panicTriggered, false, 'Manual filter change must cancel panic');
+                    assert.strictEqual(manualSettings.panicBackupSettings, null, 'Manual filter change must discard snapshot');
+                    assert.strictEqual(manualSettings.hideNames, false);
+                    console.log('Manual modification during emergency test PASSED!');
+
+                    console.log('24. Testing invalid/corrupted snapshot handling in restoreEmergency...');
+                    mockStorage = {
+                      protectionLevel: 'maximum',
+                      hideMessages: true,
+                      hidePreviews: true,
+                      hideNames: true,
+                      hidePhotos: true,
+                      hideMedia: true,
+                      particleEffect: true,
+                      panicTriggered: true,
+                      panicBackupSettings: { corrupt: true } // Corrupt snapshot!
+                    };
+
+                    SettingsManager.restoreEmergency((unchangedSettings, corruptErr) => {
+                      assert.notStrictEqual(corruptErr, null);
+                      assert.strictEqual(corruptErr.code, 'INVALID_SNAPSHOT');
+                      assert.strictEqual(mockStorage.panicTriggered, true, 'Must NOT clear panic on invalid snapshot');
+                      assert.strictEqual(mockStorage.hideNames, true, 'Filters must remain in Maximum');
+                      console.log('Corrupted snapshot refusal test PASSED!');
+
+                      console.log('25. Testing explicit recoverEmergencyFallback...');
+                      SettingsManager.recoverEmergencyFallback((recoveredSettings, recErr) => {
+                        assert.strictEqual(recErr, null);
+                        assert.strictEqual(recoveredSettings.protectionLevel, 'advanced');
+                        assert.strictEqual(recoveredSettings.panicTriggered, false);
+                        assert.strictEqual(recoveredSettings.panicBackupSettings, null);
+                        assert.strictEqual(recoveredSettings.hideNames, false);
+                        assert.strictEqual(recoveredSettings.hidePhotos, false);
+                        assert.strictEqual(recoveredSettings.hideMedia, true);
+                        console.log('Explicit recovery fallback test PASSED!');
+
+                        console.log('26. Testing Custom configuration activation and exact restoration...');
+                        mockStorage = {
+                          protectionLevel: 'custom',
+                          hideMessages: true,
+                          hidePreviews: false,
+                          hideNames: true,
+                          hidePhotos: false,
+                          hideMedia: false,
+                          particleEffect: true,
+                          panicTriggered: false,
+                          panicBackupSettings: null,
+                          lastUpdated: 1000
+                        };
+
+                        SettingsManager.activateEmergency((customActive) => {
+                          assert.strictEqual(customActive.panicTriggered, true);
+                          assert.strictEqual(customActive.protectionLevel, 'maximum');
+                          assert.strictEqual(customActive.panicBackupSettings.protectionLevel, 'custom');
+                          assert.strictEqual(customActive.panicBackupSettings.hidePreviews, false);
+                          assert.strictEqual(customActive.panicBackupSettings.hideNames, true);
+
+                          SettingsManager.restoreEmergency((customRestored, cRestErr) => {
+                            assert.strictEqual(cRestErr, null);
+                            assert.strictEqual(customRestored.protectionLevel, 'custom');
+                            assert.strictEqual(customRestored.hideMessages, true);
+                            assert.strictEqual(customRestored.hidePreviews, false);
+                            assert.strictEqual(customRestored.hideNames, true);
+                            assert.strictEqual(customRestored.hidePhotos, false);
+                            assert.strictEqual(customRestored.hideMedia, false);
+                            assert.strictEqual(customRestored.panicTriggered, false);
+                            assert.strictEqual(customRestored.panicBackupSettings, null);
+                            console.log('Custom configuration activation and restore PASSED!');
+
+                            console.log('All automated tests executed successfully!');
+                          });
+                        });
+                      });
+                    });
+                  });
+                });
+              });
+            });
+          });
         });
       });
     });
