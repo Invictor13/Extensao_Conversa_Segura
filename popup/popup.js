@@ -27,7 +27,9 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   const panicBanner = document.getElementById('panicBanner');
+  const panicBannerText = document.getElementById('panicBannerText');
   const exitPanicBtn = document.getElementById('exitPanicBtn');
+  const recoverFallbackBtn = document.getElementById('recoverFallbackBtn');
   const customBadge = document.getElementById('customBadge');
 
   function updateUI(settings, error) {
@@ -44,9 +46,21 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
 
-    // Update panic mode banner visibility
+    // Update panic mode banner visibility and status
     if (panicBanner) {
       panicBanner.style.display = settings.panicTriggered ? 'flex' : 'none';
+      if (!settings.panicTriggered) {
+        panicBanner.classList.remove('error-state');
+        if (panicBannerText) {
+          panicBannerText.innerHTML = '<strong>Modo de Emergência Ativo (Alt+Q)</strong>';
+        }
+        if (exitPanicBtn) {
+          exitPanicBtn.style.display = 'inline-block';
+        }
+        if (recoverFallbackBtn) {
+          recoverFallbackBtn.style.display = 'none';
+        }
+      }
     }
 
     // Update preset active button
@@ -85,10 +99,44 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Bind exit panic button
+  // Bind exit/restore panic button
   if (exitPanicBtn) {
     exitPanicBtn.addEventListener('click', () => {
-      SettingsManager.set({ panicTriggered: false }, updateUI);
+      if (typeof SettingsManager.restoreEmergency === 'function') {
+        SettingsManager.restoreEmergency((restoredSettings, err) => {
+          if (err) {
+            console.warn('[Privacy Pro] Falha na restauração do snapshot:', err);
+            // Show error state in banner without silent fallback
+            if (panicBanner) {
+              panicBanner.classList.add('error-state');
+            }
+            if (panicBannerText) {
+              panicBannerText.innerHTML = '<span>Restauração indisponível (snapshot ausente/inválido).</span>';
+            }
+            if (exitPanicBtn) {
+              exitPanicBtn.style.display = 'none';
+            }
+            if (recoverFallbackBtn) {
+              recoverFallbackBtn.style.display = 'inline-block';
+            }
+            return;
+          }
+          updateUI(restoredSettings);
+        });
+      } else {
+        SettingsManager.set({ panicTriggered: false }, updateUI);
+      }
+    });
+  }
+
+  // Bind explicit fallback recovery button (when snapshot is invalid/missing)
+  if (recoverFallbackBtn) {
+    recoverFallbackBtn.addEventListener('click', () => {
+      if (typeof SettingsManager.recoverEmergencyFallback === 'function') {
+        SettingsManager.recoverEmergencyFallback(updateUI);
+      } else {
+        SettingsManager.applyPreset('advanced', updateUI);
+      }
     });
   }
 
