@@ -77,19 +77,39 @@
       '[data-icon="default-group"]',
       '[data-icon="default-community"]'
     ],
-    // Media (Images, Videos, Stickers, Audio, Status Viewer Media)
+    // Media (Images, Videos, Stickers, Audio, Galleries, Profile Media, Status & Fullscreen Viewers)
     media: [
       '#main [data-testid="image-thumb"]',
       '#main [data-testid="video-thumb"]',
       '#main [data-testid="audio-player"]',
       '#main [data-testid="sticker"]',
+      '#main [data-testid="msg-container"] img:not([src*="emoji"])',
+      '#main [data-testid="msg-container"] video',
+      '#main [data-testid="msg-container"] canvas',
       '#main .message-in img:not([src*="emoji"]):not([src*="dyn"])',
       '#main .message-out img:not([src*="emoji"]):not([src*="dyn"])',
       '#main video',
       '#main canvas',
+      // Profile drawer & shared media galleries (Contact/Group Info)
+      'div[role="region"] [data-testid="media-gallery"] img',
+      'div[role="region"] [data-testid="media-gallery"] video',
+      'div[role="region"] div[role="grid"] img',
+      'div[role="region"] div[role="gridcell"] img',
+      'div[role="region"] div[role="gridcell"] video',
+      'div[role="region"] div[role="gridcell"] canvas',
+      // Fullscreen view / Modals / Dialogs / Status viewer
+      'div[role="dialog"] img:not([data-testid="avatar-tile"]):not([data-testid="chat-avatar"])',
+      'div[role="dialog"] video',
+      'div[role="dialog"] canvas',
+      'div[data-animate-modal-popup="true"] img:not([data-testid="avatar-tile"]):not([data-testid="chat-avatar"])',
+      'div[data-animate-modal-popup="true"] video',
+      'div[data-animate-modal-popup="true"] canvas',
       '[data-testid="status-viewer"] img',
       '[data-testid="status-viewer"] video',
-      '[data-testid="status-viewer"] canvas'
+      '[data-testid="status-viewer"] canvas',
+      '[data-testid="media-viewer"] img',
+      '[data-testid="media-viewer"] video',
+      '[data-testid="media-viewer"] canvas'
     ]
   };
 
