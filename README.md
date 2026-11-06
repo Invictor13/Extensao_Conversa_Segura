@@ -4,6 +4,21 @@ Extensão de navegador (Manifest V3) para WhatsApp Web (`web.whatsapp.com`), pro
 
 ---
 
+## Plataforma Suportada e Expansões Futuras
+
+### Plataforma Atualmente Suportada
+- **WhatsApp Web (`https://web.whatsapp.com/*`)**
+
+> **Aviso Importante de Escopo:** O suporte ativo e validado desta extensão é **exclusivo para WhatsApp Web**. Nenhuma outra plataforma de comunicação possui suporte funcional na versão atual.
+
+### Expansões Futuras em Avaliação
+- **Microsoft Teams (Web)**
+- **Outros serviços de comunicação e mensagens**, conforme viabilidade técnica e arquitetural.
+
+> **Nota:** As integrações mencionadas acima representam **possibilidades futuras de roadmap e ainda não estão disponíveis**. Não há compatibilidade implementada, homologada ou ativa com serviços além do WhatsApp Web.
+
+---
+
 ## Autoria & Propriedade
 
 Desenvolvido e de propriedade de **Victor Ladislau Viana**.
@@ -20,6 +35,19 @@ O **Tela Privada** é uma ferramenta estritamente focada em **proteção visual 
 - **Não detecta nem remove spywares, malwares ou softwares maliciosos**.
 - **Não impede capturas de tela (screenshots) nem gravações** realizadas pelo sistema operacional ou por softwares instalados no dispositivo.
 - **Não realiza extração nem monitoramento** de dados ou mensagens dos usuários. Toda a operação é executada localmente no navegador, sem telemetria nem comunicação externa.
+
+---
+
+## Capturas de Tela e Recursos Visuais
+
+As capturas de tela oficiais da extensão estão organizadas no diretório [`assets/store/screenshots/`](assets/store/screenshots/):
+
+1. **`01-painel-popup-controles.png`**: Interface do popup da extensão com seleção de predefinições (Básico, Avançado, Máximo), alternadores manuais de filtros, efeito de partículas e atalho de emergência.
+2. **`02-whatsapp-web-mensagens-ocultas.png`**: Interface do WhatsApp Web com filtro de mensagens e prévias ativado, protegendo conversas em ambientes abertos.
+3. **`03-whatsapp-web-painel-integrado.png`**: Demonstração de uso conjunto da aplicação com o menu de predefinições do popup aberto sobre a tela do WhatsApp Web.
+4. **`04-whatsapp-web-protecao-completa-midia-fotos.png`**: Visão completa da proteção máxima, demonstrando a ocultação simultânea de mensagens, mídias compartilhadas, fotos de perfil e prévias.
+
+Para a documentação completa dos assets e conformidade com a Chrome Web Store, consulte [`docs/CHROME_WEB_STORE_LISTING.md`](docs/CHROME_WEB_STORE_LISTING.md) e [`docs/CHROME_WEB_STORE_CHECKLIST.md`](docs/CHROME_WEB_STORE_CHECKLIST.md).
 
 ---
 
