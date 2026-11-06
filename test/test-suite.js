@@ -4,6 +4,9 @@
  */
 
 const assert = require('assert');
+const fs = require('fs');
+const path = require('path');
+const { execSync } = require('child_process');
 
 // Mock browser environment globals
 let mockStorage = {};
@@ -331,9 +334,7 @@ SettingsManager.applyPreset('basic', (basicSettings, basicErr) => {
 
           // 9. Parity & onInstalled Lifecycle Suite
           console.log('9. Testing parity between background.js and SettingsManager.DEFAULT_SETTINGS...');
-          const fs = require('fs');
           const vm = require('vm');
-          const path = require('path');
 
           const bgSource = fs.readFileSync(path.join(__dirname, '../background.js'), 'utf8');
 
@@ -854,6 +855,267 @@ SettingsManager.applyPreset('basic', (basicSettings, basicErr) => {
                             assert.strictEqual(popupLogoDim.height, 128);
 
                             console.log('Visual assets integrity and dimensions test PASSED!');
+
+                            // 28. PR10 — Rigorous Real-DOM Simulation for Profile Drawer Media, Links, and Docs (10 scenarios)
+                            console.log('28. Testing Profile Drawer Media, Links and Docs censorship (10 mandatory scenarios)...');
+
+                            const pyValidationScript = `
+import sys, json
+from playwright.sync_api import sync_playwright
+
+with open('content/content.css', 'r', encoding='utf-8') as f:
+    css_content = f.read()
+
+html_template = '''
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+''' + css_content + '''
+</style>
+</head>
+<body id="test-body">
+  <div id="app">
+    <!-- Main conversation (for reference) -->
+    <div id="main">
+      <div data-testid="msg-container">
+        <img id="chat-msg-img" src="blob:https://web.whatsapp.com/chat-img">
+      </div>
+    </div>
+
+    <!-- Contact Info / Group Info Right Drawer Panel -->
+    <div data-testid="drawer-right" role="region">
+      <!-- Profile Header / Drawer Header (Individual Contact or Group) -->
+      <header id="drawer-header">
+        <button id="btn-back" aria-label="Voltar"><svg><path></path></svg></button>
+        <span id="drawer-title">Dados do contato</span>
+        <button id="btn-close" aria-label="Fechar"><svg><path></path></svg></button>
+      </header>
+
+      <!-- Profile Avatar & Details -->
+      <div id="profile-details">
+        <img id="profile-avatar" data-testid="avatar-tile" src="https://web.whatsapp.com/avatar.jpg">
+        <span id="contact-name">Victor Ladislau Viana</span>
+        <span id="contact-phone">+55 11 99999-9999</span>
+      </div>
+
+      <!-- Navigation tabs between Mídia, Links, Docs -->
+      <div role="tablist" id="nav-tabs">
+        <button id="tab-btn-media" role="tab" aria-selected="true"><span>Mídia</span></button>
+        <button id="tab-btn-links" role="tab" aria-selected="false"><span>Links</span></button>
+        <button id="tab-btn-docs" role="tab" aria-selected="false"><span>Docs</span></button>
+      </div>
+
+      <!-- Container: Tab 1 - Mídia (Images, Videos, Background-image thumbnails) -->
+      <div id="panel-media" role="tabpanel" style="display: block;">
+        <div role="grid">
+          <div role="gridcell" id="gridcell-media-1">
+            <!-- WAWebMediaThumbnail background-image representation -->
+            <div id="media-thumb-bg" style="background-image: url('blob:https://web.whatsapp.com/uuid-media-1'); width: 80px; height: 80px;"></div>
+          </div>
+          <div role="gridcell" id="gridcell-media-2">
+            <!-- Image tag representation -->
+            <img id="media-thumb-img" src="blob:https://web.whatsapp.com/uuid-img-2">
+          </div>
+          <div role="gridcell" id="gridcell-media-3">
+            <!-- Video representation -->
+            <video id="media-thumb-video" src="blob:https://web.whatsapp.com/uuid-vid-3"></video>
+          </div>
+        </div>
+      </div>
+
+      <!-- Container: Tab 2 - Links (Previews, Link cards, Thumbnails) -->
+      <div id="panel-links" role="tabpanel" style="display: none;">
+        <div role="list" id="links-list">
+          <div role="listitem" id="link-item-1">
+            <div data-testid="link-preview">
+              <img id="link-preview-img-1" src="https://example.com/preview1.jpg">
+              <span id="link-title-1">Notícias Tech</span>
+            </div>
+          </div>
+          <div role="listitem" id="link-item-2">
+            <div data-testid="link-preview-container">
+              <div id="link-thumb-bg-2" data-testid="link-preview-thumbnail" style="background-image: url('https://example.com/thumb2.jpg');"></div>
+              <span id="link-url-2">https://github.com/Invictor13</span>
+            </div>
+          </div>
+          <div role="listitem" id="link-item-3">
+            <div data-testid="list-item-link">
+              <div id="link-thumb-bg-3" data-testid="thumbnail" style="background-image: url('blob:https://web.whatsapp.com/link-thumb-3');"></div>
+              <span id="link-desc-3">Tela Privada Repositório</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Container: Tab 3 - Docs (Document thumbnails, preview icons) -->
+      <div id="panel-docs" role="tabpanel" style="display: none;">
+        <div role="list" id="docs-list">
+          <div role="listitem" id="doc-item-1">
+            <div data-testid="list-item-document">
+              <div id="doc-thumb-bg-1" data-testid="thumbnail" style="background-image: url('blob:https://web.whatsapp.com/doc-thumb-1');"></div>
+              <span id="doc-title-1">Contrato_Final.pdf</span>
+              <span id="doc-size-1">2.4 MB</span>
+            </div>
+          </div>
+          <div role="listitem" id="doc-item-2">
+            <div data-testid="document-thumb">
+              <img id="doc-thumb-img-2" src="blob:https://web.whatsapp.com/doc-thumb-2.png">
+            </div>
+            <span id="doc-title-2">Relatorio_2026.docx</span>
+          </div>
+          <div role="listitem" id="doc-item-3">
+            <div data-testid="doc-preview">
+              <div id="doc-preview-canvas-3"><canvas id="doc-canvas-3"></canvas></div>
+              <span id="doc-title-3">Apresentacao.pptx</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
+'''
+
+def run_tests():
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=True)
+        page = browser.new_page()
+        page.set_content(html_template)
+
+        def is_blurred(selector):
+            filt = page.eval_on_selector(selector, 'el => window.getComputedStyle(el).filter')
+            return 'blur' in filt
+
+        def get_filter(selector):
+            return page.eval_on_selector(selector, 'el => window.getComputedStyle(el).filter')
+
+        def set_hide_media(enable):
+            if enable:
+                page.eval_on_selector('#test-body', 'el => el.classList.add("vlv-hide-media")')
+            else:
+                page.eval_on_selector('#test-body', 'el => el.classList.remove("vlv-hide-media")')
+
+        # Scenario 8: hideMedia = true -> Initial state
+        set_hide_media(True)
+
+        # 1. Aba Mídia: imagens e vídeos
+        assert is_blurred('#media-thumb-bg'), f"Media thumb bg should be blurred: {get_filter('#media-thumb-bg')}"
+        assert is_blurred('#media-thumb-img'), f"Media img should be blurred: {get_filter('#media-thumb-img')}"
+        assert is_blurred('#media-thumb-video'), f"Media video should be blurred: {get_filter('#media-thumb-video')}"
+
+        # 2. Aba Links: miniaturas e prévias visuais
+        assert is_blurred('#link-preview-img-1'), f"Link preview img should be blurred: {get_filter('#link-preview-img-1')}"
+        assert is_blurred('#link-thumb-bg-2'), f"Link thumb bg 2 should be blurred: {get_filter('#link-thumb-bg-2')}"
+        assert is_blurred('#link-thumb-bg-3'), f"Link thumb bg 3 should be blurred: {get_filter('#link-thumb-bg-3')}"
+
+        # 3. Aba Docs: miniaturas e prévias de documentos
+        assert is_blurred('#doc-thumb-bg-1'), f"Doc thumb bg 1 should be blurred: {get_filter('#doc-thumb-bg-1')}"
+        assert is_blurred('#doc-thumb-img-2'), f"Doc thumb img 2 should be blurred: {get_filter('#doc-thumb-img-2')}"
+        assert is_blurred('#doc-canvas-3'), f"Doc canvas 3 should be blurred: {get_filter('#doc-canvas-3')}"
+
+        # 4. Perfil de contato (Individual contact drawer)
+        page.eval_on_selector('#drawer-title', 'el => el.innerText = "Dados do contato"')
+        assert is_blurred('#media-thumb-bg') and is_blurred('#link-preview-img-1') and is_blurred('#doc-thumb-bg-1'), "Individual contact profile media must be blurred"
+
+        # 5. Perfil de grupo (Group info drawer)
+        page.eval_on_selector('#drawer-title', 'el => el.innerText = "Dados do grupo"')
+        assert is_blurred('#media-thumb-bg') and is_blurred('#link-preview-img-1') and is_blurred('#doc-thumb-bg-1'), "Group info profile media must be blurred"
+
+        # 6. Conteúdo inserido dinamicamente (Dynamic infinite scroll or new media received)
+        page.evaluate('''() => {
+            const grid = document.querySelector("#panel-media div[role='grid']");
+            const newCell = document.createElement("div");
+            newCell.setAttribute("role", "gridcell");
+            const dynMediaDiv = document.createElement("div");
+            dynMediaDiv.id = "dynamic-media-thumb";
+            dynMediaDiv.style.backgroundImage = 'url("blob:https://web.whatsapp.com/dyn-1")';
+            newCell.appendChild(dynMediaDiv);
+            grid.appendChild(newCell);
+
+            const linksList = document.querySelector("#links-list");
+            const newLink = document.createElement("div");
+            newLink.setAttribute("role", "listitem");
+            newLink.innerHTML = '<div data-testid="link-preview"><img id="dynamic-link-img" src="https://example.com/dyn-preview.png"></div>';
+            linksList.appendChild(newLink);
+
+            const docsList = document.querySelector("#docs-list");
+            const newDoc = document.createElement("div");
+            newDoc.setAttribute("role", "listitem");
+            const dynDocDiv = document.createElement("div");
+            dynDocDiv.setAttribute("data-testid", "list-item-document");
+            const dynDocThumb = document.createElement("div");
+            dynDocThumb.id = "dynamic-doc-thumb";
+            dynDocThumb.setAttribute("data-testid", "thumbnail");
+            dynDocThumb.style.backgroundImage = 'url("blob:https://web.whatsapp.com/dyn-doc")';
+            dynDocDiv.appendChild(dynDocThumb);
+            newDoc.appendChild(dynDocDiv);
+            docsList.appendChild(newDoc);
+        }''')
+        assert is_blurred('#dynamic-media-thumb'), "Dynamically added media thumb must be blurred immediately by CSS"
+        assert is_blurred('#dynamic-link-img'), "Dynamically added link preview img must be blurred immediately by CSS"
+        assert is_blurred('#dynamic-doc-thumb'), "Dynamically added doc thumb must be blurred immediately by CSS"
+
+        # 7. Alternância entre abas (Switching active tabs)
+        page.evaluate('''() => {
+            document.querySelector("#panel-media").style.display = "none";
+            document.querySelector("#panel-links").style.display = "block";
+            document.querySelector("#tab-btn-media").setAttribute("aria-selected", "false");
+            document.querySelector("#tab-btn-links").setAttribute("aria-selected", "true");
+        }''')
+        assert is_blurred('#link-preview-img-1') and is_blurred('#dynamic-link-img'), "Links tab media must remain blurred after tab switch"
+
+        page.evaluate('''() => {
+            document.querySelector("#panel-links").style.display = "none";
+            document.querySelector("#panel-docs").style.display = "block";
+            document.querySelector("#tab-btn-links").setAttribute("aria-selected", "false");
+            document.querySelector("#tab-btn-docs").setAttribute("aria-selected", "true");
+        }''')
+        assert is_blurred('#doc-thumb-bg-1') and is_blurred('#dynamic-doc-thumb'), "Docs tab media must remain blurred after tab switch"
+
+        # 9. hideMedia = false: conteúdo visual normal (unblurred)
+        set_hide_media(False)
+        assert not is_blurred('#media-thumb-bg'), f"Media thumb must be unblurred when hideMedia=false: {get_filter('#media-thumb-bg')}"
+        assert not is_blurred('#media-thumb-img'), f"Media img must be unblurred when hideMedia=false: {get_filter('#media-thumb-img')}"
+        assert not is_blurred('#media-thumb-video'), f"Media video must be unblurred when hideMedia=false: {get_filter('#media-thumb-video')}"
+        assert not is_blurred('#link-preview-img-1'), f"Link preview must be unblurred when hideMedia=false: {get_filter('#link-preview-img-1')}"
+        assert not is_blurred('#doc-thumb-bg-1'), f"Doc thumb must be unblurred when hideMedia=false: {get_filter('#doc-thumb-bg-1')}"
+        assert not is_blurred('#dynamic-media-thumb'), f"Dynamic media thumb must be unblurred when hideMedia=false: {get_filter('#dynamic-media-thumb')}"
+
+        # 10. Controles, ícones e textos de navegação preservados (NEVER blurred by hideMedia)
+        set_hide_media(True)
+        assert not is_blurred('#btn-back'), "Back button must NOT be blurred"
+        assert not is_blurred('#btn-close'), "Close button must NOT be blurred"
+        assert not is_blurred('#drawer-title'), "Drawer title must NOT be blurred"
+        assert not is_blurred('#contact-name'), "Contact name must NOT be blurred by hideMedia"
+        assert not is_blurred('#contact-phone'), "Contact phone must NOT be blurred by hideMedia"
+        assert not is_blurred('#tab-btn-media'), "Tab button Mídia must NOT be blurred"
+        assert not is_blurred('#tab-btn-links'), "Tab button Links must NOT be blurred"
+        assert not is_blurred('#tab-btn-docs'), "Tab button Docs must NOT be blurred"
+        assert not is_blurred('#link-title-1'), "Link title text must NOT be blurred"
+        assert not is_blurred('#link-url-2'), "Link URL text must NOT be blurred"
+        assert not is_blurred('#doc-title-1'), "Doc title text must NOT be blurred"
+        assert not is_blurred('#doc-size-1'), "Doc size text must NOT be blurred"
+
+        browser.close()
+        print("Profile Drawer 10-scenarios real DOM simulation PASSED!")
+
+run_tests()
+`;
+
+                            const tempTestPath = path.join(__dirname, 'temp_eval_drawer_test.py');
+                            fs.writeFileSync(tempTestPath, pyValidationScript, 'utf8');
+
+                            try {
+                              const testOutput = execSync('python3 ' + tempTestPath, { encoding: 'utf8' });
+                              assert.strictEqual(testOutput.includes('Profile Drawer 10-scenarios real DOM simulation PASSED!'), true);
+                              console.log('Profile Drawer Media, Links and Docs 10-scenario tests PASSED!');
+                            } finally {
+                              if (fs.existsSync(tempTestPath)) {
+                                fs.unlinkSync(tempTestPath);
+                              }
+                            }
 
                             console.log('All automated tests executed successfully!');
                           });
