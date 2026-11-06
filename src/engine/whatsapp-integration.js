@@ -97,6 +97,28 @@
       'div[role="region"] div[role="gridcell"] img',
       'div[role="region"] div[role="gridcell"] video',
       'div[role="region"] div[role="gridcell"] canvas',
+      // Profile drawer: Media, Links & Docs tabs (Contact Info, Group Info, Drawer Right)
+      '[data-testid="contact-info"] [data-testid="media-gallery"] img',
+      '[data-testid="contact-info"] [data-testid="media-gallery"] video',
+      '[data-testid="group-info"] [data-testid="media-gallery"] img',
+      '[data-testid="group-info"] [data-testid="media-gallery"] video',
+      'div[role="region"] [data-testid="list-item-media-preview"]',
+      'div[role="region"] [data-testid="media-preview-container"]',
+      'div[role="region"] [data-testid="media-canvas"]',
+      // Profile drawer: Links tab visual previews & link cards
+      'div[role="region"] [data-testid="link-preview"]',
+      'div[role="region"] [data-testid="link-preview"] img',
+      'div[role="region"] [data-testid="list-item-link"] img',
+      'div[role="region"] [data-testid="list-item-link"] [data-testid="thumbnail"]',
+      '[data-testid="contact-info"] [data-testid="link-preview"] img',
+      '[data-testid="group-info"] [data-testid="link-preview"] img',
+      // Profile drawer: Docs tab visual previews & document items
+      'div[role="region"] [data-testid="list-item-document"] [data-testid="thumbnail"]',
+      'div[role="region"] [data-testid="list-item-document"] img',
+      'div[role="region"] [data-testid="document-thumb"]',
+      'div[role="region"] [data-testid="doc-preview"]',
+      '[data-testid="contact-info"] [data-testid="document-thumb"]',
+      '[data-testid="group-info"] [data-testid="document-thumb"]',
       // Fullscreen view / Modals / Dialogs / Status viewer
       'div[role="dialog"] img:not([data-testid="avatar-tile"]):not([data-testid="chat-avatar"])',
       'div[role="dialog"] video',

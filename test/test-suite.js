@@ -263,6 +263,12 @@ const mediaSelectors = WhatsAppIntegration.SELECTORS.media;
 assert.strictEqual(mediaSelectors.includes('#main [data-testid="msg-container"] img:not([src*="emoji"])'), true);
 assert.strictEqual(mediaSelectors.includes('div[role="region"] [data-testid="media-gallery"] img'), true);
 assert.strictEqual(mediaSelectors.includes('div[role="region"] div[role="grid"] img'), true);
+assert.strictEqual(mediaSelectors.includes('[data-testid="contact-info"] [data-testid="media-gallery"] img'), true);
+assert.strictEqual(mediaSelectors.includes('[data-testid="group-info"] [data-testid="media-gallery"] img'), true);
+assert.strictEqual(mediaSelectors.includes('div[role="region"] [data-testid="link-preview"] img'), true);
+assert.strictEqual(mediaSelectors.includes('[data-testid="contact-info"] [data-testid="link-preview"] img'), true);
+assert.strictEqual(mediaSelectors.includes('div[role="region"] [data-testid="document-thumb"]'), true);
+assert.strictEqual(mediaSelectors.includes('[data-testid="contact-info"] [data-testid="document-thumb"]'), true);
 assert.strictEqual(mediaSelectors.includes('div[role="dialog"] img:not([data-testid="avatar-tile"]):not([data-testid="chat-avatar"])'), true);
 assert.strictEqual(mediaSelectors.includes('[data-testid="media-viewer"] img'), true);
 console.log('Independent media & photos filter toggling and SELECTORS.media test PASSED!');
@@ -808,6 +814,46 @@ SettingsManager.applyPreset('basic', (basicSettings, basicErr) => {
                             assert.strictEqual(customRestored.panicTriggered, false);
                             assert.strictEqual(customRestored.panicBackupSettings, null);
                             console.log('Custom configuration activation and restore PASSED!');
+
+                            console.log('27. Testing visual assets integrity and dimensions...');
+                            const manifest = JSON.parse(fs.readFileSync(path.join(__dirname, '../manifest.json'), 'utf8'));
+                            assert.strictEqual(manifest.icons['16'], 'icons/icon16.png');
+                            assert.strictEqual(manifest.icons['48'], 'icons/icon48.png');
+                            assert.strictEqual(manifest.icons['128'], 'icons/icon128.png');
+                            assert.strictEqual(manifest.action.default_icon['16'], 'icons/icon16.png');
+                            assert.strictEqual(manifest.action.default_icon['48'], 'icons/icon48.png');
+                            assert.strictEqual(manifest.action.default_icon['128'], 'icons/icon128.png');
+
+                            const popupHtml = fs.readFileSync(path.join(__dirname, '../popup/popup.html'), 'utf8');
+                            assert.strictEqual(popupHtml.includes('src="logo.png"'), true);
+
+                            // Helper to check PNG header dimensions
+                            function readPngDimensions(filePath) {
+                              const buf = fs.readFileSync(filePath);
+                              // PNG signature check
+                              assert.strictEqual(buf.toString('hex', 0, 8), '89504e470d0a1a0a');
+                              const width = buf.readUInt32BE(16);
+                              const height = buf.readUInt32BE(20);
+                              return { width, height };
+                            }
+
+                            const icon16Dim = readPngDimensions(path.join(__dirname, '../icons/icon16.png'));
+                            assert.strictEqual(icon16Dim.width, 16);
+                            assert.strictEqual(icon16Dim.height, 16);
+
+                            const icon48Dim = readPngDimensions(path.join(__dirname, '../icons/icon48.png'));
+                            assert.strictEqual(icon48Dim.width, 48);
+                            assert.strictEqual(icon48Dim.height, 48);
+
+                            const icon128Dim = readPngDimensions(path.join(__dirname, '../icons/icon128.png'));
+                            assert.strictEqual(icon128Dim.width, 128);
+                            assert.strictEqual(icon128Dim.height, 128);
+
+                            const popupLogoDim = readPngDimensions(path.join(__dirname, '../popup/logo.png'));
+                            assert.strictEqual(popupLogoDim.width, 128);
+                            assert.strictEqual(popupLogoDim.height, 128);
+
+                            console.log('Visual assets integrity and dimensions test PASSED!');
 
                             console.log('All automated tests executed successfully!');
                           });
