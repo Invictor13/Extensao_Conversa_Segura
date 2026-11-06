@@ -8,7 +8,7 @@ Este documento reúne todas as informações, textos oficiais, declarações té
 
 - **Nome da Extensão:** Tela Privada
 - **Slogan / Tagline Oficial:** Proteção visual para WhatsApp Web
-- **Versão:** 1.0.0
+- **Versão:** 2.0.0
 - **Manifest:** Manifest V3
 - **Categoria da Loja:** Produtividade (*Productivity*) / Privacidade e Segurança (*Privacy & Security*)
 - **Idioma Principal:** Português (Brasil) — `pt_BR`
@@ -79,7 +79,7 @@ PRIVACIDADE, SEGURANÇA E TRANSPARÊNCIA
 • 100% Local: Todas as preferências são salvas exclusivamente no chrome.storage.local do seu navegador.
 • Zero Telemetria: A extensão não coleta, não monitora, não armazena e não transmite nenhuma informação pessoal ou conteúdo de mensagens.
 • Sem Conexões Externas: Nenhuma requisição de rede ou chamada a servidores de terceiros é realizada.
-• Mínimo de Permissões: Utiliza unicamente a permissão "storage" para gravar suas preferências e "commands" para o atalho de teclado.
+• Mínimo de Permissões: Utiliza unicamente a permissão "storage" para gravar suas preferências locais, além do recurso de atalho de teclado ("commands").
 
 --------------------------------------------------
 AVISO LEGAL E LIMITAÇÕES IMPORTANTES (DISCLAIMER)
@@ -96,13 +96,13 @@ AVISO LEGAL E LIMITAÇÕES IMPORTANTES (DISCLAIMER)
 
 ## 4. Declaração de Permissões e Uso de Dados (CWS Privacy Tab)
 
-| Campo da Chrome Web Store | Declaração Oficial |
-| :--- | :--- |
-| **Coleta de Dados do Usuário** | Não coleta nenhum tipo de dado pessoal, identificador, histórico de navegação, conteúdo financeiro, mensagens ou localização (*Single Purpose: No data collected*). |
-| **Permissão `storage`** | Necessária para persistir localmente no dispositivo do usuário as opções de filtro visual e preferências de interface selecionadas no popup. |
-| **Permissão `commands`** | Necessária para registrar e escutar o atalho de teclado global de emergência (`Alt + Q`). |
-| **Host Permissions (`https://web.whatsapp.com/*`)** | Necessária para injetar os estilos CSS e scripts locais de controle visual na aba do WhatsApp Web. |
-| **Uso de Código Remoto** | Não utiliza código remoto hospedado externamente. 100% dos scripts são locais empacotados na extensão, em conformidade estrita com o Manifest V3. |
+| Campo / Recurso no Manifest | Tipo de Recurso | Declaração / Justificativa Oficial |
+| :--- | :--- | :--- |
+| **Coleta de Dados do Usuário** | Política de Privacidade | Não coleta nenhum tipo de dado pessoal, identificador, histórico de navegação, conteúdo financeiro, mensagens ou localização (*Single Purpose: No data collected*). |
+| **Permissão `storage`** | `permissions` | Permissão declarada no array `permissions` do `manifest.json`. Necessária para persistir localmente no dispositivo do usuário (via `chrome.storage.local`) as opções de filtro visual e preferências de interface selecionadas no popup. |
+| **Atalho `commands` (`toggle-panic`)** | `commands` | Recurso de comandos do manifesto (chave `commands` no `manifest.json`, não é uma permissão da lista `permissions`). Permite registrar e escutar o atalho de teclado global de emergência (`Alt + Q`). |
+| **Injeção em `https://web.whatsapp.com/*`** | `content_scripts.matches` | Declaração declarativa em `content_scripts` (não requer `host_permissions` no `manifest.json`). Necessária para injetar localmente os seletores CSS e scripts de proteção visual na aba oficial do WhatsApp Web. |
+| **Uso de Código Remoto** | Conformidade MV3 | Não utiliza código remoto hospedado externamente. 100% dos scripts e folhas de estilo são locais empacotados na extensão, em conformidade estrita com o Manifest V3. |
 
 ---
 
