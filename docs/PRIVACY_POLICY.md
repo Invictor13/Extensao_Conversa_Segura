@@ -1,6 +1,6 @@
 # Política de Privacidade — Tela Privada
 
-**Última atualização:** 26 de fevereiro de 2025
+**Última atualização:** 06 de novembro de 2026
 **Versão do documento:** 2.0.0
 **Status de publicação:** Documento oficial preparado para publicação pública (ex.: GitHub Pages)
 
@@ -72,7 +72,7 @@ O manifesto da extensão (`manifest.json`) declara o conjunto estritamente míni
    - **Justificativa:** Declaração necessária para injetar localmente a folha de estilos (`content.css`) e os scripts de controle de exibição na aba oficial do WhatsApp Web.
    - *Nota Técnica de Conformidade:* A extensão **não utiliza** nem declara `host_permissions` amplas ou opcionais no manifesto. A injeção ocorre exclusivamente de forma declarativa via `content_scripts.matches`.
 3. **`commands` (`toggle-panic` / `Alt+Q`)**
-   - **Justificativa:** Recurso de atalho de teclado global do navegador para permitir que o usuário ative instantaneamente a Proteção Máxima em situações de emergência visual sem precisar clicar no ícone da extensão.
+   - **Justificativa:** Recurso de atalho de teclado do navegador para permitir que o usuário ative instantaneamente a Proteção Máxima em situações de emergência visual sem precisar clicar no ícone da extensão.
 
 ---
 
