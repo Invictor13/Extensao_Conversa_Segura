@@ -1117,6 +1117,208 @@ run_tests()
                               }
                             }
 
+                            // 29. PR01 — Mandatory Comprehensive Chat Media Censorship Suite (15 Scenarios)
+                            console.log('29. Testing PR01 Chat Media Censorship: Videos, GIFs, Stickers, Dyn CDN, Emojis, Avatares (15 mandatory scenarios)...');
+
+                            const pyMediaSuiteScript = `
+import sys, json
+from playwright.sync_api import sync_playwright
+
+with open('content/content.css', 'r', encoding='utf-8') as f:
+    css_content = f.read()
+
+html_media_template = '''
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+''' + css_content + '''
+</style>
+</head>
+<body id="test-body">
+  <div id="app">
+    <!-- Main Chat Container -->
+    <div id="main">
+      <!-- 1 & 7. Received message: Video before playback (poster thumbnail with background-image) -->
+      <div class="message-in" data-id="msg-video-in-1">
+        <div data-testid="media-video">
+          <div id="video-poster-thumb" style="background-image: url('blob:https://web.whatsapp.com/uuid-vid-poster'); width: 200px; height: 150px;"></div>
+          <button id="video-play-btn" aria-label="Play"></button>
+        </div>
+      </div>
+
+      <!-- 2 & 8. Sent message: Video playing inline -->
+      <div class="message-out" data-id="msg-video-out-2">
+        <div data-testid="video-content">
+          <video id="video-playing" src="blob:https://web.whatsapp.com/uuid-vid-stream" controls></video>
+        </div>
+      </div>
+
+      <!-- 3. GIF looping in message -->
+      <div class="message-in" data-id="msg-gif-in-3">
+        <div data-testid="video-content">
+          <video id="gif-looping" autoplay loop muted playsinline src="blob:https://web.whatsapp.com/uuid-gif-mp4"></video>
+          <span id="gif-badge">GIF</span>
+        </div>
+      </div>
+
+      <!-- 4. GIF thumbnail (not autoplaying / paused) -->
+      <div class="message-out" data-id="msg-gif-out-4">
+        <div data-testid="gif-content">
+          <div id="gif-thumb-bg" style="background-image: url('blob:https://web.whatsapp.com/uuid-gif-thumb'); width: 120px; height: 120px;"></div>
+        </div>
+      </div>
+
+      <!-- 5. Static sticker in sticker-container -->
+      <div class="message-in" data-id="msg-sticker-in-5">
+        <div data-testid="sticker-container">
+          <img id="static-sticker-img" src="blob:https://web.whatsapp.com/uuid-sticker-static">
+        </div>
+      </div>
+
+      <!-- 6. Animated sticker (rendered via canvas) -->
+      <div class="message-out" data-id="msg-sticker-out-6">
+        <div data-testid="sticker-container">
+          <canvas id="animated-sticker-canvas" width="100" height="100"></canvas>
+        </div>
+      </div>
+
+      <!-- 9. Image hosted on CDN with dyn in URL (MUST BE CENSORED by hideMedia) -->
+      <div class="message-in" data-id="msg-dyn-media-7">
+        <img id="dyn-media-img" src="https://dyn.whatsapp-cdn1.net/v/t61.24694-24/dyn-image-sample.jpg">
+      </div>
+
+      <!-- 10. Legitimate text message with inline emoji (MUST NOT BE BLURRED) -->
+      <div class="message-in" data-id="msg-text-8">
+        <div class="copyable-text">
+          <span id="msg-text-content">Olá mundo!</span>
+          <img id="emoji-legitimate" src="https://static.whatsapp.net/emoji/smile.png" alt="😀">
+        </div>
+      </div>
+
+      <!-- 11 & 12. Contact Avatar / Profile Photo inside group message header (MUST NOT BE BLURRED by hideMedia) -->
+      <div class="message-in" data-id="msg-group-9">
+        <img id="contact-avatar-in-group" data-testid="avatar-tile" src="https://dyn.whatsapp-cdn.net/avatar-dyn.jpg">
+        <span id="contact-name-in-group">Victor Ladislau Viana</span>
+      </div>
+    </div>
+
+    <!-- 13. Expression Picker (Stickers and GIFs tray) -->
+    <div id="expression-panel" data-testid="panel-drawer">
+      <div id="sticker-picker-container" data-testid="sticker-picker">
+        <img id="picker-sticker-img" src="blob:https://web.whatsapp.com/picker-sticker-1">
+        <canvas id="picker-sticker-canvas" width="60" height="60"></canvas>
+      </div>
+      <div id="gif-picker-container" data-testid="gif-picker">
+        <video id="picker-gif-video" autoplay loop muted src="blob:https://web.whatsapp.com/picker-gif-1"></video>
+        <div id="picker-gif-thumb" style="background-image: url('https://example.com/picker-thumb.jpg'); width: 60px; height: 60px;"></div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
+'''
+
+def run_media_suite():
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=True)
+        page = browser.new_page()
+        page.set_content(html_media_template)
+
+        def is_blurred(selector):
+            filt = page.eval_on_selector(selector, 'el => window.getComputedStyle(el).filter')
+            return 'blur' in filt
+
+        def get_filter(selector):
+            return page.eval_on_selector(selector, 'el => window.getComputedStyle(el).filter')
+
+        def set_hide_media(enable):
+            if enable:
+                page.eval_on_selector('#test-body', 'el => el.classList.add("vlv-hide-media")')
+            else:
+                page.eval_on_selector('#test-body', 'el => el.classList.remove("vlv-hide-media")')
+
+        # Test with hideMedia = True
+        set_hide_media(True)
+
+        # 1. Vídeo antes da reprodução (miniatura com background-image)
+        assert is_blurred('#video-poster-thumb'), f"Video poster thumbnail must be blurred: {get_filter('#video-poster-thumb')}"
+
+        # 2. Vídeo em reprodução
+        assert is_blurred('#video-playing'), f"Playing video content must be blurred: {get_filter('#video-playing')}"
+
+        # 3. GIF em loop
+        assert is_blurred('#gif-looping'), f"Looping GIF must be blurred: {get_filter('#gif-looping')}"
+
+        # 4. GIF em miniatura
+        assert is_blurred('#gif-thumb-bg'), f"GIF thumbnail must be blurred: {get_filter('#gif-thumb-bg')}"
+
+        # 5. Figurinha estática
+        assert is_blurred('#static-sticker-img'), f"Static sticker must be blurred: {get_filter('#static-sticker-img')}"
+
+        # 6. Figurinha animada
+        assert is_blurred('#animated-sticker-canvas'), f"Animated sticker canvas must be blurred: {get_filter('#animated-sticker-canvas')}"
+
+        # 7. Mensagem recebida (mídia em .message-in)
+        assert is_blurred('#video-poster-thumb') and is_blurred('#static-sticker-img'), "Received message media must be protected"
+
+        # 8. Mensagem enviada (mídia em .message-out)
+        assert is_blurred('#video-playing') and is_blurred('#animated-sticker-canvas'), "Sent message media must be protected"
+
+        # 9. Imagem hospedada em CDN dyn
+        assert is_blurred('#dyn-media-img'), f"Image on dyn CDN must be blurred: {get_filter('#dyn-media-img')}"
+
+        # 10. Emoji legítimo (NUNCA desfocado por hideMedia)
+        assert not is_blurred('#emoji-legitimate'), f"Emoji must NEVER be blurred by hideMedia: {get_filter('#emoji-legitimate')}"
+
+        # 11 & 12. Avatar de contato e foto de perfil (NUNCA desfocados por hideMedia isolado)
+        assert not is_blurred('#contact-avatar-in-group'), f"Avatar tile must NOT be blurred by hideMedia: {get_filter('#contact-avatar-in-group')}"
+        assert not is_blurred('#contact-name-in-group'), f"Contact name must NOT be blurred by hideMedia: {get_filter('#contact-name-in-group')}"
+
+        # 13. Painel de figurinhas/GIFs (Expression Picker)
+        assert is_blurred('#picker-sticker-img'), f"Picker sticker img must be blurred: {get_filter('#picker-sticker-img')}"
+        assert is_blurred('#picker-sticker-canvas'), f"Picker sticker canvas must be blurred: {get_filter('#picker-sticker-canvas')}"
+        assert is_blurred('#picker-gif-video'), f"Picker gif video must be blurred: {get_filter('#picker-gif-video')}"
+        assert is_blurred('#picker-gif-thumb'), f"Picker gif thumb must be blurred: {get_filter('#picker-gif-thumb')}"
+
+        # 14. hideMedia = false (nenhum desfoque residual)
+        set_hide_media(False)
+        assert not is_blurred('#video-poster-thumb'), "Video poster must be unblurred when hideMedia=false"
+        assert not is_blurred('#video-playing'), "Playing video must be unblurred when hideMedia=false"
+        assert not is_blurred('#gif-looping'), "Looping GIF must be unblurred when hideMedia=false"
+        assert not is_blurred('#gif-thumb-bg'), "GIF thumb must be unblurred when hideMedia=false"
+        assert not is_blurred('#static-sticker-img'), "Static sticker must be unblurred when hideMedia=false"
+        assert not is_blurred('#animated-sticker-canvas'), "Animated sticker canvas must be unblurred when hideMedia=false"
+        assert not is_blurred('#dyn-media-img'), "Dyn media must be unblurred when hideMedia=false"
+        assert not is_blurred('#picker-sticker-img'), "Picker sticker must be unblurred when hideMedia=false"
+        assert not is_blurred('#picker-gif-video'), "Picker gif must be unblurred when hideMedia=false"
+
+        # 15. Reativação de hideMedia (proteção restabelecida)
+        set_hide_media(True)
+        assert is_blurred('#video-poster-thumb'), "Video poster must be blurred again on hideMedia reactivation"
+        assert is_blurred('#gif-looping'), "Looping GIF must be blurred again on hideMedia reactivation"
+        assert is_blurred('#static-sticker-img'), "Static sticker must be blurred again on hideMedia reactivation"
+        assert is_blurred('#picker-gif-video'), "Picker gif must be blurred again on hideMedia reactivation"
+
+        browser.close()
+        print("PR01 Chat Media Censorship 15-scenarios real DOM simulation PASSED!")
+
+run_media_suite()
+`;
+
+                            const tempMediaTestPath = path.join(__dirname, 'temp_eval_media_suite_test.py');
+                            fs.writeFileSync(tempMediaTestPath, pyMediaSuiteScript, 'utf8');
+
+                            try {
+                              const mediaTestOutput = execSync('python3 ' + tempMediaTestPath, { encoding: 'utf8' });
+                              assert.strictEqual(mediaTestOutput.includes('PR01 Chat Media Censorship 15-scenarios real DOM simulation PASSED!'), true);
+                              console.log('PR01 Chat Media Censorship 15-scenario tests PASSED!');
+                            } finally {
+                              if (fs.existsSync(tempMediaTestPath)) {
+                                fs.unlinkSync(tempMediaTestPath);
+                              }
+                            }
+
                             console.log('All automated tests executed successfully!');
                           });
                         });
