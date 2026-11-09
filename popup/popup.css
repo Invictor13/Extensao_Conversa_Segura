@@ -224,19 +224,21 @@ body {
   gap: 6px;
 }
 
-.time-select {
+.time-select,
+.language-select {
   background-color: #FFFFFF;
   color: var(--text-main);
   border: 1px solid var(--border-green);
   border-radius: 4px;
-  padding: 2px 4px;
+  padding: 2px 6px;
   font-size: 11px;
   font-weight: 600;
   outline: none;
   cursor: pointer;
 }
 
-.time-select:focus {
+.time-select:focus,
+.language-select:focus {
   border-color: var(--vlv-green);
 }
 

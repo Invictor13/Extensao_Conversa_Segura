@@ -23,10 +23,12 @@
     particleEffect: true,
     panicTriggered: false,
     panicBackupSettings: null,
+    language: 'pt_BR',
     lastUpdated: Date.now()
   };
 
   const VALID_LEVELS = ['basic', 'advanced', 'maximum', 'custom'];
+  const VALID_LANGUAGES = ['pt_BR', 'en', 'es'];
 
   const FILTER_KEYS = [
     'hideMessages',
@@ -120,6 +122,11 @@
     if (input.panicBackupSettings === null || (typeof input.panicBackupSettings === 'object' && input.panicBackupSettings !== null)) {
       sanitized.panicBackupSettings = input.panicBackupSettings;
     }
+    if (VALID_LANGUAGES.includes(input.language)) {
+      sanitized.language = input.language;
+    } else {
+      sanitized.language = 'pt_BR';
+    }
     if (typeof input.lastUpdated === 'number') sanitized.lastUpdated = input.lastUpdated;
 
     // Recalculate protection level dynamically
@@ -150,6 +157,9 @@
     if (typeof partialInput.panicTriggered === 'boolean') sanitizedPartial.panicTriggered = partialInput.panicTriggered;
     if (partialInput.panicBackupSettings === null || (typeof partialInput.panicBackupSettings === 'object' && partialInput.panicBackupSettings !== null)) {
       sanitizedPartial.panicBackupSettings = partialInput.panicBackupSettings;
+    }
+    if (Object.prototype.hasOwnProperty.call(partialInput, 'language')) {
+      sanitizedPartial.language = VALID_LANGUAGES.includes(partialInput.language) ? partialInput.language : 'pt_BR';
     }
 
     sanitizedPartial.lastUpdated = Date.now();

@@ -22,6 +22,7 @@ const DEFAULT_SETTINGS = {
   particleEffect: true,
   panicTriggered: false,
   panicBackupSettings: null,
+  language: 'pt_BR',
   lastUpdated: Date.now()
 };
 

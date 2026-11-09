@@ -455,6 +455,7 @@ SettingsManager.applyPreset('basic', (basicSettings, basicErr) => {
           assert.strictEqual(freshPayload.particleEffect, true);
           assert.strictEqual(freshPayload.panicTriggered, false);
           assert.strictEqual(freshPayload.panicBackupSettings, null);
+          assert.strictEqual(freshPayload.language, 'pt_BR');
           assert.strictEqual(typeof freshPayload.lastUpdated, 'number');
           assert.strictEqual(SettingsManager.detectPreset(bgStorage), 'advanced');
           console.log('Fresh install starts in Advanced test PASSED!');
@@ -470,6 +471,7 @@ SettingsManager.applyPreset('basic', (basicSettings, basicErr) => {
             particleEffect: false,
             panicTriggered: false,
             panicBackupSettings: null,
+            language: 'pt_BR',
             lastUpdated: 1600000000000
           });
           capturedOnInstalledListener({ reason: 'update' });
@@ -477,6 +479,7 @@ SettingsManager.applyPreset('basic', (basicSettings, basicErr) => {
           assert.strictEqual(bgStorage.protectionLevel, 'basic');
           assert.strictEqual(bgStorage.hideMedia, false);
           assert.strictEqual(bgStorage.particleEffect, false);
+          assert.strictEqual(bgStorage.language, 'pt_BR');
           assert.strictEqual(bgStorage.lastUpdated, 1600000000000);
           assert.strictEqual(SettingsManager.detectPreset(bgStorage), 'basic');
           console.log('Update preserves Basic preset test PASSED!');
@@ -492,6 +495,7 @@ SettingsManager.applyPreset('basic', (basicSettings, basicErr) => {
             particleEffect: true,
             panicTriggered: false,
             panicBackupSettings: null,
+            language: 'en',
             lastUpdated: 1650000000000
           });
           capturedOnInstalledListener({ reason: 'update' });
@@ -499,6 +503,7 @@ SettingsManager.applyPreset('basic', (basicSettings, basicErr) => {
           assert.strictEqual(bgStorage.protectionLevel, 'maximum');
           assert.strictEqual(bgStorage.hideNames, true);
           assert.strictEqual(bgStorage.hidePhotos, true);
+          assert.strictEqual(bgStorage.language, 'en');
           assert.strictEqual(bgStorage.lastUpdated, 1650000000000);
           assert.strictEqual(SettingsManager.detectPreset(bgStorage), 'maximum');
           console.log('Update preserves Maximum preset test PASSED!');
@@ -514,6 +519,7 @@ SettingsManager.applyPreset('basic', (basicSettings, basicErr) => {
             particleEffect: true,
             panicTriggered: false,
             panicBackupSettings: null,
+            language: 'es',
             lastUpdated: 1670000000000,
             userNotes: 'preserve-extra-keys',
             futureVersionFlag: 42
@@ -522,13 +528,14 @@ SettingsManager.applyPreset('basic', (basicSettings, basicErr) => {
           assert.strictEqual(setCalls.length, 0, 'No set call should occur when all known settings already exist');
           assert.strictEqual(bgStorage.hidePreviews, false);
           assert.strictEqual(bgStorage.hideNames, true);
+          assert.strictEqual(bgStorage.language, 'es');
           assert.strictEqual(bgStorage.userNotes, 'preserve-extra-keys');
           assert.strictEqual(bgStorage.futureVersionFlag, 42);
           assert.strictEqual(bgStorage.lastUpdated, 1670000000000);
           assert.strictEqual(SettingsManager.detectPreset(bgStorage), 'custom');
           console.log('Update preserves Custom and extra keys test PASSED!');
 
-          console.log('15. Testing onInstalled lifecycle: update writes ONLY missing keys...');
+          console.log('15. Testing onInstalled lifecycle: update writes ONLY missing keys (including migration of language)...');
           resetStorageSpy({
             protectionLevel: 'advanced',
             hideMessages: true,
@@ -537,15 +544,16 @@ SettingsManager.applyPreset('basic', (basicSettings, basicErr) => {
             hidePhotos: false,
             hideMedia: true,
             lastUpdated: 1700000000000
-            // Missing particleEffect, panicTriggered, panicBackupSettings
+            // Missing particleEffect, panicTriggered, panicBackupSettings, language
           });
           capturedOnInstalledListener({ reason: 'update' });
           assert.strictEqual(setCalls.length, 1, 'Exactly one set call should occur for missing keys');
           const missingPayload = setCalls[0];
-          assert.deepStrictEqual(Object.keys(missingPayload).sort(), ['panicBackupSettings', 'panicTriggered', 'particleEffect'].sort());
+          assert.deepStrictEqual(Object.keys(missingPayload).sort(), ['language', 'panicBackupSettings', 'panicTriggered', 'particleEffect'].sort());
           assert.strictEqual(missingPayload.particleEffect, true);
           assert.strictEqual(missingPayload.panicTriggered, false);
           assert.strictEqual(missingPayload.panicBackupSettings, null);
+          assert.strictEqual(missingPayload.language, 'pt_BR');
           assert.strictEqual(missingPayload.lastUpdated, undefined, 'Existing lastUpdated must NOT be in payload');
           assert.strictEqual(bgStorage.lastUpdated, 1700000000000, 'Existing lastUpdated must be preserved exactly');
           console.log('Missing-keys-only update test PASSED!');
@@ -559,6 +567,7 @@ SettingsManager.applyPreset('basic', (basicSettings, basicErr) => {
             hideNames: false,
             hidePhotos: false,
             hideMedia: false,
+            language: 'pt_BR',
             lastUpdated: fixedTimestamp
             // Missing particleEffect, panicTriggered, panicBackupSettings
           });
@@ -579,7 +588,8 @@ SettingsManager.applyPreset('basic', (basicSettings, basicErr) => {
             hideMedia: true,
             particleEffect: true,
             panicTriggered: false,
-            panicBackupSettings: null
+            panicBackupSettings: null,
+            language: 'pt_BR'
             // lastUpdated is missing!
           });
           capturedOnInstalledListener({ reason: 'update' });
@@ -855,6 +865,158 @@ SettingsManager.applyPreset('basic', (basicSettings, basicErr) => {
                             assert.strictEqual(popupLogoDim.height, 128);
 
                             console.log('Visual assets integrity and dimensions test PASSED!');
+
+                            // 27b. PR 2.0.2 — Internationalization (i18n) Test Suite
+                            console.log('27b. Testing PR 2.0.2 Internationalization (i18n) catalogs, module and lifecycle...');
+                            const PrivacyI18n = require('../src/core/i18n.js');
+
+                            // 1. Syntactic validity of the 3 messages.json files
+                            const ptBrMessages = JSON.parse(fs.readFileSync(path.join(__dirname, '../_locales/pt_BR/messages.json'), 'utf8'));
+                            const enMessages = JSON.parse(fs.readFileSync(path.join(__dirname, '../_locales/en/messages.json'), 'utf8'));
+                            const esMessages = JSON.parse(fs.readFileSync(path.join(__dirname, '../_locales/es/messages.json'), 'utf8'));
+
+                            assert.strictEqual(typeof ptBrMessages, 'object');
+                            assert.strictEqual(typeof enMessages, 'object');
+                            assert.strictEqual(typeof esMessages, 'object');
+
+                            // 2. Parity of keys across all 3 locale messages.json files
+                            const ptBrKeys = Object.keys(ptBrMessages).sort();
+                            const enKeys = Object.keys(enMessages).sort();
+                            const esKeys = Object.keys(esMessages).sort();
+
+                            assert.deepStrictEqual(ptBrKeys, enKeys, 'pt_BR and en messages.json keys must match 1:1');
+                            assert.deepStrictEqual(ptBrKeys, esKeys, 'pt_BR and es messages.json keys must match 1:1');
+                            assert.strictEqual(ptBrKeys.includes('extensionName'), true);
+                            assert.strictEqual(ptBrKeys.includes('extensionDescription'), true);
+                            assert.strictEqual(ptBrKeys.includes('commandTogglePanicDescription'), true);
+
+                            // 3. Manifest placeholders and version validation
+                            assert.strictEqual(manifest.version, '2.0.2');
+                            assert.strictEqual(manifest.default_locale, 'pt_BR');
+                            assert.strictEqual(manifest.name, '__MSG_extensionName__');
+                            assert.strictEqual(manifest.description, '__MSG_extensionDescription__');
+                            assert.strictEqual(manifest.commands['toggle-panic'].description, '__MSG_commandTogglePanicDescription__');
+
+                            // 4. Parity of dictionary keys in PrivacyI18n
+                            const dictPtKeys = Object.keys(PrivacyI18n.DICTIONARIES.pt_BR).sort();
+                            const dictEnKeys = Object.keys(PrivacyI18n.DICTIONARIES.en).sort();
+                            const dictEsKeys = Object.keys(PrivacyI18n.DICTIONARIES.es).sort();
+                            assert.deepStrictEqual(dictPtKeys, dictEnKeys, 'PrivacyI18n pt_BR and en dictionary keys must match 1:1');
+                            assert.deepStrictEqual(dictPtKeys, dictEsKeys, 'PrivacyI18n pt_BR and es dictionary keys must match 1:1');
+
+                            // 5. Verification of all popup data-i18n keys
+                            const popupHtmlContent = fs.readFileSync(path.join(__dirname, '../popup/popup.html'), 'utf8');
+                            const dataI18nRegex = /data-i18n(?:-aria-label|-title|-alt)?="([^"]+)"/g;
+                            let match;
+                            while ((match = dataI18nRegex.exec(popupHtmlContent)) !== null) {
+                              const key = match[1];
+                              assert.strictEqual(
+                                typeof PrivacyI18n.DICTIONARIES.pt_BR[key],
+                                'string',
+                                'Key ' + key + ' from popup.html must exist in DICTIONARIES'
+                              );
+                            }
+
+                            // 6. SettingsManager acceptance of valid languages and rejection of invalid languages
+                            assert.strictEqual(SettingsManager.sanitizeSettings({ language: 'en' }).language, 'en');
+                            assert.strictEqual(SettingsManager.sanitizeSettings({ language: 'es' }).language, 'es');
+                            assert.strictEqual(SettingsManager.sanitizeSettings({ language: 'pt_BR' }).language, 'pt_BR');
+                            assert.strictEqual(SettingsManager.sanitizeSettings({ language: 'fr' }).language, 'pt_BR');
+                            assert.strictEqual(SettingsManager.sanitizeSettings({ language: 123 }).language, 'pt_BR');
+                            assert.strictEqual(SettingsManager.sanitizeSettings({ language: null }).language, 'pt_BR');
+
+                            // 7. SettingsManager.set language persistence and filter independence
+                            // Ensure mockStorage has complete functional settings before activating emergency
+                            mockStorage = {
+                              protectionLevel: 'advanced',
+                              hideMessages: true,
+                              hidePreviews: true,
+                              hideNames: false,
+                              hidePhotos: false,
+                              hideMedia: true,
+                              particleEffect: true,
+                              panicTriggered: false,
+                              panicBackupSettings: null,
+                              language: 'pt_BR',
+                              lastUpdated: Date.now()
+                            };
+
+                            SettingsManager.set({ language: 'en' }, (enSetSettings, enSetErr) => {
+                              assert.strictEqual(enSetErr, null);
+                              assert.strictEqual(enSetSettings.language, 'en');
+                              // Filters must remain unchanged
+                              assert.strictEqual(enSetSettings.hideMessages, true);
+                              assert.strictEqual(enSetSettings.hideMedia, true);
+
+                              // 8. Emergency mode isolation: Alt+Q preserves language preference
+                              SettingsManager.activateEmergency((panicSettings, panicErr) => {
+                                assert.strictEqual(panicErr, null);
+                                assert.strictEqual(panicSettings.panicTriggered, true);
+                                assert.strictEqual(panicSettings.language, 'en', 'Emergency activation must NOT overwrite language');
+                                assert.strictEqual(panicSettings.panicBackupSettings.language, undefined, 'panicBackupSettings snapshot must NOT include language');
+
+                                SettingsManager.restoreEmergency((restoredPanic, restErr) => {
+                                  assert.strictEqual(restErr, null);
+                                  assert.strictEqual(restoredPanic.panicTriggered, false);
+                                  assert.strictEqual(restoredPanic.language, 'en', 'Emergency restore must NOT overwrite language');
+
+                                  // Reset back to pt_BR
+                                  SettingsManager.set({ language: 'pt_BR' }, (ptSettings, ptErr) => {
+                                    assert.strictEqual(ptErr, null);
+                                    assert.strictEqual(ptSettings.language, 'pt_BR');
+
+                                    // 9. Popup DOM Real-time translation integration test via Playwright
+                                    const pyPopupI18nScript = `
+import os
+from playwright.sync_api import sync_playwright
+
+popup_path = os.path.abspath('popup/popup.html')
+
+with sync_playwright() as p:
+    browser = p.chromium.launch(headless=True)
+    page = browser.new_page()
+    page.goto('file://' + popup_path)
+
+    # 1. Default should be pt_BR
+    assert page.eval_on_selector('.brand-text .subtitle', 'el => el.textContent') == 'Proteção visual para WhatsApp Web'
+    assert page.eval_on_selector('span[data-i18n="filterHideMessages"]', 'el => el.textContent') == 'Ocultar Mensagens'
+    assert page.eval_on_selector('#languageSelect', 'el => el.value') == 'pt_BR'
+
+    # 2. Switch to en
+    page.select_option('#languageSelect', 'en')
+    assert page.eval_on_selector('.brand-text .subtitle', 'el => el.textContent') == 'Visual privacy for WhatsApp Web'
+    assert page.eval_on_selector('span[data-i18n="filterHideMessages"]', 'el => el.textContent') == 'Hide Messages'
+    assert page.eval_on_selector('button#presetAdvanced', 'el => el.textContent') == 'Advanced'
+    assert page.eval_on_selector('#shortcutPrefix', 'el => el.textContent') == 'Emergency Shortcut:'
+    assert page.eval_on_selector('#aboutPrefix', 'el => el.textContent') == 'Developed and owned by'
+
+    # 3. Switch to es
+    page.select_option('#languageSelect', 'es')
+    assert page.eval_on_selector('.brand-text .subtitle', 'el => el.textContent') == 'Protección visual para WhatsApp Web'
+    assert page.eval_on_selector('span[data-i18n="filterHideMessages"]', 'el => el.textContent') == 'Ocultar Mensajes'
+    assert page.eval_on_selector('button#presetAdvanced', 'el => el.textContent') == 'Avanzado'
+    assert page.eval_on_selector('#shortcutPrefix', 'el => el.textContent') == 'Atajo de Emergencia:'
+    assert page.eval_on_selector('#aboutPrefix', 'el => el.textContent') == 'Desarrollado y propiedad de'
+
+    browser.close()
+    print("Popup DOM real-time translation Playwright test PASSED!")
+`;
+                                    const tempPopupTestPath = path.join(__dirname, 'temp_eval_popup_i18n.py');
+                                    fs.writeFileSync(tempPopupTestPath, pyPopupI18nScript, 'utf8');
+                                    try {
+                                      const popupTestOutput = execSync('python3 ' + tempPopupTestPath, { encoding: 'utf8' });
+                                      assert.strictEqual(popupTestOutput.includes('Popup DOM real-time translation Playwright test PASSED!'), true);
+                                    } finally {
+                                      if (fs.existsSync(tempPopupTestPath)) {
+                                        fs.unlinkSync(tempPopupTestPath);
+                                      }
+                                    }
+
+                                    console.log('PR 2.0.2 Internationalization tests PASSED!');
+                                  });
+                                });
+                              });
+                            });
 
                             // 28. PR10 — Rigorous Real-DOM Simulation for Profile Drawer Media, Links, and Docs (10 scenarios)
                             console.log('28. Testing Profile Drawer Media, Links and Docs censorship (10 mandatory scenarios)...');
