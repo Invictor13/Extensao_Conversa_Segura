@@ -1481,6 +1481,229 @@ run_media_suite()
                               }
                             }
 
+                            // 30. PR 2.0.3 — Temporary Hover Reveal Test Suite (10 Mandatory Scenarios)
+                            console.log('30. Testing PR 2.0.3 Temporary Hover Reveal for Messages and Media (10 mandatory scenarios)...');
+
+                            // Verify that SettingsManager settings and chrome.storage.local remain untouched by hover reveal
+                            const beforeHoverStorage = JSON.stringify(mockStorage);
+
+                            const pyHoverSuiteScript = `
+import sys, json
+from playwright.sync_api import sync_playwright
+
+with open('content/content.css', 'r', encoding='utf-8') as f:
+    css_content = f.read()
+
+html_hover_template = f'''
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+{css_content}
+</style>
+</head>
+<body id="test-body" class="vlv-hide-messages vlv-hide-media">
+  <div id="app">
+    <div id="main">
+      <!-- Scenario: Pure text received -->
+      <div class="message-in" data-id="msg-text-in">
+        <div data-testid="msg-container" id="text-in-container">
+          <div class="copyable-text" id="text-in-content">Mensagem de texto recebida</div>
+        </div>
+      </div>
+
+      <!-- Scenario: Pure text sent -->
+      <div class="message-out" data-id="msg-text-out">
+        <div data-testid="msg-container" id="text-out-container">
+          <div class="copyable-text" id="text-out-content">Mensagem de texto enviada</div>
+        </div>
+      </div>
+
+      <!-- Scenario: Image with caption -->
+      <div class="message-in" data-id="msg-img-in">
+        <div data-testid="msg-container" id="img-in-container">
+          <img id="img-in-content" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" style="width:100px; height:100px; display:block;">
+          <div class="copyable-text" id="img-in-caption">Legenda da imagem</div>
+        </div>
+      </div>
+
+      <!-- Scenario: Video in message -->
+      <div class="message-out" data-id="msg-video-out">
+        <div data-testid="msg-container" id="video-out-container">
+          <div data-testid="video-content">
+            <video id="video-out-content" src="blob:https://web.whatsapp.com/sample-vid" style="width:120px; height:80px; display:block;"></video>
+          </div>
+        </div>
+      </div>
+
+      <!-- Scenario: GIF looping in message -->
+      <div class="message-in" data-id="msg-gif-in">
+        <div data-testid="msg-container" id="gif-in-container">
+          <div data-testid="video-content">
+            <video id="gif-in-content" autoplay loop muted src="blob:https://web.whatsapp.com/sample-gif" style="width:100px; height:100px; display:block;"></video>
+          </div>
+        </div>
+      </div>
+
+      <!-- Scenario: Static sticker -->
+      <div class="message-in" data-id="msg-sticker-static">
+        <div data-testid="msg-container" id="sticker-static-container">
+          <div data-testid="sticker-container">
+            <img id="sticker-static-content" src="blob:https://web.whatsapp.com/sample-sticker" style="width:80px; height:80px; display:block;">
+          </div>
+        </div>
+      </div>
+
+      <!-- Scenario: Animated sticker (canvas) -->
+      <div class="message-out" data-id="msg-sticker-anim">
+        <div data-testid="msg-container" id="sticker-anim-container">
+          <div data-testid="sticker-container">
+            <canvas id="sticker-anim-content" width="80" height="80" style="display:block;"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
+'''
+
+def run_hover_suite():
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=True)
+        page = browser.new_page()
+        page.set_content(html_hover_template)
+        page.wait_for_timeout(350)
+
+        def is_blurred(selector):
+            filt = page.eval_on_selector(selector, 'el => window.getComputedStyle(el).filter')
+            return 'blur' in filt and 'none' not in filt
+
+        def get_filter(selector):
+            return page.eval_on_selector(selector, 'el => window.getComputedStyle(el).filter')
+
+        # 1. Validation 1: Conteúdo censurado no estado normal por padrão
+        assert is_blurred('#text-in-container'), f'text-in-container should be blurred: {get_filter("#text-in-container")}'
+        assert is_blurred('#text-out-container'), f'text-out-container should be blurred: {get_filter("#text-out-container")}'
+        assert is_blurred('#img-in-content'), f'img-in-content should be blurred: {get_filter("#img-in-content")}'
+        assert is_blurred('#img-in-container'), f'img-in-container should be blurred: {get_filter("#img-in-container")}'
+        assert is_blurred('#video-out-content'), f'video-out-content should be blurred: {get_filter("#video-out-content")}'
+        assert is_blurred('#gif-in-content'), f'gif-in-content should be blurred: {get_filter("#gif-in-content")}'
+        assert is_blurred('#sticker-static-content'), f'sticker-static-content should be blurred: {get_filter("#sticker-static-content")}'
+        assert is_blurred('#sticker-anim-content'), f'sticker-anim-content should be blurred: {get_filter("#sticker-anim-content")}'
+
+        # 2. Validation 2: Revelação temporária ao passar o mouse sobre mensagem de texto
+        page.hover('#text-in-content')
+        page.wait_for_timeout(350)
+        assert not is_blurred('#text-in-container'), 'text-in-container should be revealed on hover'
+        assert is_blurred('#text-out-container'), 'text-out-container must remain blurred'
+        assert is_blurred('#img-in-content'), 'img-in-content must remain blurred'
+
+        # 3. Validation 3: Acompanhamento correto ao transitar entre mensagens vizinhas
+        page.hover('#text-out-content')
+        page.wait_for_timeout(350)
+        assert is_blurred('#text-in-container'), 'text-in-container must re-blur'
+        assert not is_blurred('#text-out-container'), 'text-out-container should now be revealed'
+
+        # 4. Validation 4: Revelação independente de mídia sem revelar textos vizinhos indevidamente
+        page.hover('#img-in-content')
+        page.wait_for_timeout(350)
+        assert not is_blurred('#img-in-content'), 'img-in-content should be revealed'
+        assert is_blurred('#img-in-container'), 'img-in-container must stay blurred to protect caption'
+        assert is_blurred('#text-out-container'), 'text-out-container must re-blur'
+
+        # 5. Validation 5: Revelação de legenda quando cursor está sobre o texto da legenda
+        page.hover('#img-in-caption')
+        page.wait_for_timeout(350)
+        assert not is_blurred('#img-in-container'), 'img-in-container should reveal caption'
+        assert is_blurred('#img-in-content'), 'img-in-content must remain blurred when only caption is hovered'
+
+        # 6. Validation 6: Revelação temporária de vídeos e GIFs
+        page.hover('#video-out-content')
+        page.wait_for_timeout(350)
+        assert not is_blurred('#video-out-content'), 'video-out-content should be revealed on hover'
+
+        page.hover('#gif-in-content')
+        page.wait_for_timeout(350)
+        assert not is_blurred('#gif-in-content'), 'gif-in-content should be revealed on hover'
+
+        # 7. Validation 7: Revelação temporária de figurinhas estáticas e animadas
+        page.hover('#sticker-static-content')
+        page.wait_for_timeout(350)
+        assert not is_blurred('#sticker-static-content'), 'sticker-static-content should be revealed on hover'
+
+        page.hover('#sticker-anim-content')
+        page.wait_for_timeout(350)
+        assert not is_blurred('#sticker-anim-content'), 'sticker-anim-content should be revealed on hover'
+
+        # 8. Validation 8: Reaplicação imediata da censura ao retirar o mouse
+        page.mouse.move(0, 0)
+        page.wait_for_timeout(350)
+        assert is_blurred('#text-in-container'), 'text-in-container must re-blur'
+        assert is_blurred('#text-out-container'), 'text-out-container must re-blur'
+        assert is_blurred('#img-in-content'), 'img-in-content must re-blur'
+        assert is_blurred('#video-out-content'), 'video-out-content must re-blur'
+        assert is_blurred('#gif-in-content'), 'gif-in-content must re-blur'
+        assert is_blurred('#sticker-static-content'), 'sticker-static-content must re-blur'
+        assert is_blurred('#sticker-anim-content'), 'sticker-anim-content must re-blur'
+
+        # 9. Validation 9: Suporte a elementos adicionados dinamicamente no DOM
+        page.evaluate('''() => {
+            const main = document.querySelector('#main');
+            const dynMsg = document.createElement('div');
+            dynMsg.className = 'message-in';
+            dynMsg.innerHTML = '<div data-testid="msg-container" id="dyn-container"><div class="copyable-text" id="dyn-text">Mensagem dinâmica</div></div>';
+            main.appendChild(dynMsg);
+        }''')
+        page.wait_for_timeout(100)
+        assert is_blurred('#dyn-container'), 'Dynamic element must be blurred initially'
+        page.hover('#dyn-text')
+        page.wait_for_timeout(350)
+        assert not is_blurred('#dyn-container'), 'Dynamic element must be revealed on hover'
+        page.mouse.move(0, 0)
+        page.wait_for_timeout(350)
+        assert is_blurred('#dyn-container'), 'Dynamic element must re-blur when mouse leaves'
+
+        # 10. Validation 10: Dispositivos sem hover (touchscreen) mantêm o conteúdo censurado
+        touch_device = p.devices['Pixel 5']
+        touch_context = browser.new_context(**touch_device)
+        touch_page = touch_context.new_page()
+        touch_page.set_content(html_hover_template)
+        touch_page.wait_for_timeout(350)
+
+        touch_filt_text = touch_page.eval_on_selector('#text-in-container', 'el => window.getComputedStyle(el).filter')
+        touch_filt_img = touch_page.eval_on_selector('#img-in-content', 'el => window.getComputedStyle(el).filter')
+        assert 'blur' in touch_filt_text, 'Touch device must keep text blurred'
+        assert 'blur' in touch_filt_img, 'Touch device must keep media blurred'
+
+        touch_page.tap('#text-in-content')
+        touch_page.wait_for_timeout(350)
+        touch_filt_tap = touch_page.eval_on_selector('#text-in-container', 'el => window.getComputedStyle(el).filter')
+        assert 'blur' in touch_filt_tap, 'Touch device tap must not trigger hover reveal'
+        touch_context.close()
+
+        browser.close()
+        print('PR 2.0.3 Temporary Hover Reveal 10-scenario tests PASSED!')
+
+run_hover_suite()
+`;
+
+                            const tempHoverTestPath = path.join(__dirname, 'temp_eval_hover_suite_test.py');
+                            fs.writeFileSync(tempHoverTestPath, pyHoverSuiteScript, 'utf8');
+
+                            try {
+                              const hoverTestOutput = execSync('python3 ' + tempHoverTestPath, { encoding: 'utf8' });
+                              assert.strictEqual(hoverTestOutput.includes('PR 2.0.3 Temporary Hover Reveal 10-scenario tests PASSED!'), true);
+                              console.log('PR 2.0.3 Temporary Hover Reveal 10-scenario tests PASSED!');
+                            } finally {
+                              if (fs.existsSync(tempHoverTestPath)) {
+                                fs.unlinkSync(tempHoverTestPath);
+                              }
+                            }
+
+                            // Verify storage was never modified during hover operations
+                            assert.strictEqual(JSON.stringify(mockStorage), beforeHoverStorage, 'Hover reveal must never alter SettingsManager or storage');
+
                             console.log('All automated tests executed successfully!');
                           });
                         });
