@@ -1,0 +1,14 @@
+{
+  "extensionName": {
+    "message": "Tela Privada",
+    "description": "Official extension name"
+  },
+  "extensionDescription": {
+    "message": "Visual privacy protection for WhatsApp Web, developed by Victor Ladislau Viana.",
+    "description": "Official extension description"
+  },
+  "commandTogglePanicDescription": {
+    "message": "Activate Maximum Emergency Protection",
+    "description": "Description for Alt+Q keyboard shortcut"
+  }
+}

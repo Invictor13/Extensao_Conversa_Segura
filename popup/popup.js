@@ -1,10 +1,11 @@
 /**
  * Victor Ladislau Viana Privacy Pro - Popup Controller
- * Connects UI controls to SettingsManager and HealthMonitor.
+ * Connects UI controls to SettingsManager, PrivacyI18n, and DOM.
  */
 
 document.addEventListener('DOMContentLoaded', () => {
   const SettingsManager = window.SettingsManager;
+  const PrivacyI18n = window.PrivacyI18n;
 
   if (!SettingsManager) {
     console.error('[Privacy Pro] SettingsManager module missing.');
@@ -31,6 +32,34 @@ document.addEventListener('DOMContentLoaded', () => {
   const exitPanicBtn = document.getElementById('exitPanicBtn');
   const recoverFallbackBtn = document.getElementById('recoverFallbackBtn');
   const customBadge = document.getElementById('customBadge');
+  const languageSelect = document.getElementById('languageSelect');
+
+  let currentLanguage = 'pt_BR';
+
+  function applyLanguage(lang) {
+    currentLanguage = (PrivacyI18n && typeof PrivacyI18n.normalizeLocale === 'function')
+      ? PrivacyI18n.normalizeLocale(lang)
+      : (lang || 'pt_BR');
+
+    if (PrivacyI18n && typeof PrivacyI18n.applyToDOM === 'function') {
+      PrivacyI18n.applyToDOM(currentLanguage, document);
+    }
+
+    if (languageSelect && languageSelect.value !== currentLanguage) {
+      languageSelect.value = currentLanguage;
+    }
+  }
+
+  function updatePanicBannerText(isError) {
+    if (!panicBannerText) return;
+    if (isError) {
+      const errText = PrivacyI18n ? PrivacyI18n.t('panicBannerError', currentLanguage) : 'Restauração indisponível (snapshot ausente/inválido).';
+      panicBannerText.innerHTML = `<span>${errText}</span>`;
+    } else {
+      const activeText = PrivacyI18n ? PrivacyI18n.t('panicBannerActive', currentLanguage) : 'Modo de Emergência Ativo (Alt+Q)';
+      panicBannerText.innerHTML = `<strong>${activeText}</strong>`;
+    }
+  }
 
   function updateUI(settings, error) {
     if (error) {
@@ -38,6 +67,11 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
     if (!settings || typeof settings !== 'object') return;
+
+    // Apply language first
+    if (settings.language) {
+      applyLanguage(settings.language);
+    }
 
     toggleIds.forEach((id) => {
       const el = document.getElementById(id);
@@ -51,14 +85,17 @@ document.addEventListener('DOMContentLoaded', () => {
       panicBanner.style.display = settings.panicTriggered ? 'flex' : 'none';
       if (!settings.panicTriggered) {
         panicBanner.classList.remove('error-state');
-        if (panicBannerText) {
-          panicBannerText.innerHTML = '<strong>Modo de Emergência Ativo (Alt+Q)</strong>';
-        }
+        updatePanicBannerText(false);
         if (exitPanicBtn) {
           exitPanicBtn.style.display = 'inline-block';
         }
         if (recoverFallbackBtn) {
           recoverFallbackBtn.style.display = 'none';
+        }
+      } else {
+        // If panic is triggered and not in error state, ensure text matches current language
+        if (!panicBanner.classList.contains('error-state')) {
+          updatePanicBannerText(false);
         }
       }
     }
@@ -83,7 +120,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Load initial settings
   SettingsManager.get(updateUI);
 
-  // Listen for real-time storage changes (e.g. from Alt+Q shortcut)
+  // Listen for real-time storage changes (e.g. from Alt+Q shortcut or storage sync)
   SettingsManager.onChanged((updatedSettings) => {
     SettingsManager.get(updateUI);
   });
@@ -99,6 +136,20 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+  // Bind language select change listener
+  if (languageSelect) {
+    languageSelect.addEventListener('change', (e) => {
+      const newLang = e.target.value;
+      applyLanguage(newLang);
+      // If panic banner is visible, refresh its text in the newly selected language
+      if (panicBanner && panicBanner.style.display !== 'none') {
+        const isError = panicBanner.classList.contains('error-state');
+        updatePanicBannerText(isError);
+      }
+      SettingsManager.set({ language: newLang });
+    });
+  }
+
   // Bind exit/restore panic button
   if (exitPanicBtn) {
     exitPanicBtn.addEventListener('click', () => {
@@ -110,9 +161,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (panicBanner) {
               panicBanner.classList.add('error-state');
             }
-            if (panicBannerText) {
-              panicBannerText.innerHTML = '<span>Restauração indisponível (snapshot ausente/inválido).</span>';
-            }
+            updatePanicBannerText(true);
             if (exitPanicBtn) {
               exitPanicBtn.style.display = 'none';
             }

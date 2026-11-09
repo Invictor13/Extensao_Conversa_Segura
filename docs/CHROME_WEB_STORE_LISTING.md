@@ -8,10 +8,12 @@ Este documento reúne todas as informações, textos oficiais, declarações té
 
 - **Nome da Extensão:** Tela Privada
 - **Slogan / Tagline Oficial:** Proteção visual para WhatsApp Web
-- **Versão:** 2.0.0
-- **Manifest:** Manifest V3
+- **Versão:** 2.0.2
+- **Manifest:** Manifest V3 (com suporte nativo a internacionalização via `_locales/`)
 - **Categoria da Loja:** Produtividade (*Productivity*) / Privacidade e Segurança (*Privacy & Security*)
-- **Idioma Principal:** Português (Brasil) — `pt_BR`
+- **Idioma Principal:** Português (Brasil) — `pt_BR` (padrão)
+- **Idiomas Suportados:** Português do Brasil (`pt_BR`), Inglês (`en`) e Espanhol (`es`)
+- **Compatibilidade Pretendida:** Google Chrome Web Store e Microsoft Edge Add-ons
 - **Desenvolvedor e Proprietário:** Victor Ladislau Viana
 - **Perfis Oficiais:**
   - **GitHub:** [https://github.com/Invictor13](https://github.com/Invictor13)
@@ -50,6 +52,10 @@ PRINCIPAIS FUNCIONALIDADES
   - Básico: Oculta mensagens e prévias.
   - Avançado (Padrão): Oculta mensagens, prévias e mídias compartilhadas.
   - Máximo: Oculta mensagens, prévias, mídias, fotos e nomes.
+• Suporte Multilíngue (i18n):
+  - Seleção manual rápida entre Português (Brasil), English e Español pelo popup.
+  - Português brasileiro como idioma padrão de fábrica.
+  - Persistência local da preferência escolhida entre sessões e reinicializações.
 • Modo Pânico / Emergência (Atalho Alt + Q): Ativa instantaneamente o nível de Proteção Máxima com um toque de teclado. Pressione novamente o atalho para restaurar os filtros anteriores.
 • Efeito Visual de Partículas: Animação sutil de fundo opcional renderizada em Canvas, otimizada para pausar quando a aba estiver oculta.
 • Revelação sob Demanda (Hover): Passe o cursor do mouse sobre o conteúdo desfocado para revelar pontualmente aquilo que você precisa ler.
