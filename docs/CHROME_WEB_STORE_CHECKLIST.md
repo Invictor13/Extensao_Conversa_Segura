@@ -1,8 +1,13 @@
-# Tela Privada — Checklist de Preparação para a Chrome Web Store
+# Tela Privada — Registro de Publicação nas Lojas
 
-Este checklist consolida todos os itens técnicos, visuais e documentais necessários para a publicação da extensão **Tela Privada** no Google Chrome Web Store Developer Dashboard.
+Este documento preserva o registro dos requisitos e materiais de publicação do **Tela Privada**. Em 10 de novembro de 2026, o produto foi informado como publicado oficialmente na Chrome Web Store e na Microsoft Edge Add-ons.
 
 ---
+
+## Status da publicação
+
+- [x] **Google Chrome Web Store:** [Tela Privada](https://chromewebstore.google.com/detail/tela-privada/pcaaiadmbhddaialecemcinlocbilkho)
+- [x] **Microsoft Edge Add-ons:** [Tela Privada](https://microsoftedge.microsoft.com/addons/detail/tela-privada/mgnaaflndjbiigpaicibclncajhopedm)
 
 ## Status dos Requisitos de Publicação
 
@@ -49,7 +54,7 @@ Legenda de Status:
 - [x] **Testes Automatizados:** Suíte de regressão passando com 100% de integridade (`node test/test-suite.js`).
 
 ### Categoria B — Documento Preparado, mas Pendente de Publicação
-- [ ] **Publicação da Política de Privacidade na Web:**
+- [ ] **Publicação da Política de Privacidade em URL institucional:**
   - *Status:* Documento oficial elaborado e auditado em `docs/PRIVACY_POLICY.md` (versão 2.0.3).
   - *Ação necessária:* Publicar o conteúdo em uma URL pública acessível (por exemplo, via GitHub Pages no repositório ou página institucional) para preenchimento obrigatório na ficha da Chrome Web Store.
   - *Responsável:* Victor Ladislau Viana.
@@ -79,7 +84,7 @@ Legenda de Status:
   - Clicar no botão "Submit for Review" (Enviar para revisão) no painel.
 
 ### Categoria D — Item Dependente de Confirmação do Google
-- [ ] **Revisão e Aprovação da Chrome Web Store:**
+- [x] **Revisão e Aprovação da Chrome Web Store:**
   - Aguardar o processo de análise automatizada e humana do time de segurança da Google Chrome Web Store.
-- [ ] **Disponibilização Pública na Loja:**
+- [x] **Disponibilização Pública na Loja:**
   - Confirmação de publicação ativa com geração de URL pública na Chrome Web Store para download e instalação pelos usuários.
