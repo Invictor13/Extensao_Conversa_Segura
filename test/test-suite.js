@@ -891,7 +891,7 @@ SettingsManager.applyPreset('basic', (basicSettings, basicErr) => {
                             assert.strictEqual(ptBrKeys.includes('commandTogglePanicDescription'), true);
 
                             // 3. Manifest placeholders and version validation
-                            assert.strictEqual(manifest.version, '2.0.2');
+                            assert.strictEqual(manifest.version, '2.0.3');
                             assert.strictEqual(manifest.default_locale, 'pt_BR');
                             assert.strictEqual(manifest.name, '__MSG_extensionName__');
                             assert.strictEqual(manifest.description, '__MSG_extensionDescription__');
@@ -1609,13 +1609,13 @@ def run_hover_suite():
         page.hover('#img-in-content')
         page.wait_for_timeout(350)
         assert not is_blurred('#img-in-content'), 'img-in-content should be revealed'
-        assert is_blurred('#img-in-container'), 'img-in-container must stay blurred to protect caption'
+        assert is_blurred('#img-in-caption'), 'img-in-caption must stay blurred to protect caption when media is hovered'
         assert is_blurred('#text-out-container'), 'text-out-container must re-blur'
 
         # 5. Validation 5: Revelação de legenda quando cursor está sobre o texto da legenda
         page.hover('#img-in-caption')
         page.wait_for_timeout(350)
-        assert not is_blurred('#img-in-container'), 'img-in-container should reveal caption'
+        assert not is_blurred('#img-in-caption'), 'img-in-caption should reveal caption'
         assert is_blurred('#img-in-content'), 'img-in-content must remain blurred when only caption is hovered'
 
         # 6. Validation 6: Revelação temporária de vídeos e GIFs
@@ -1703,6 +1703,196 @@ run_hover_suite()
 
                             // Verify storage was never modified during hover operations
                             assert.strictEqual(JSON.stringify(mockStorage), beforeHoverStorage, 'Hover reveal must never alter SettingsManager or storage');
+
+                            // 31. PR 2.0.3 — Temporary Hover Reveal for Sidebar Previews (Problema B) & Comprehensive Matrix
+                            console.log('31. Testing PR 2.0.3 Temporary Hover Reveal for Sidebar Previews & Media-Text Combinations...');
+
+                            const pySidebarHoverSuiteScript = `
+import sys, json
+from playwright.sync_api import sync_playwright
+
+with open('content/content.css', 'r', encoding='utf-8') as f:
+    css_content = f.read()
+
+html_sidebar_template = f'''
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+{css_content}
+</style>
+</head>
+<body id="test-body" class="vlv-hide-previews vlv-hide-names vlv-hide-photos vlv-hide-messages vlv-hide-media">
+  <div id="app">
+    <!-- Sidebar -->
+    <div id="side">
+      <div id="pane-side">
+        <!-- Conversation Row 1 -->
+        <div data-testid="cell-frame-container" id="row-conv-1">
+          <img id="avatar-conv-1" data-testid="avatar-tile" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7">
+          <span data-testid="cell-frame-title" id="name-conv-1">Carlos Eduardo</span>
+          <span data-testid="cell-frame-subtitle" id="preview-conv-1">Vamos revisar a proposta amanhã cedo.</span>
+          <span data-testid="cell-frame-time" id="time-conv-1">11:15</span>
+        </div>
+
+        <!-- Conversation Row 2 -->
+        <div data-testid="cell-frame-container" id="row-conv-2">
+          <img id="avatar-conv-2" data-testid="avatar-tile" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7">
+          <span data-testid="cell-frame-title" id="name-conv-2">Mariana Lima</span>
+          <span data-testid="cell-frame-subtitle" id="preview-conv-2">
+            <span data-testid="last-msg-status" id="last-status-conv-2">Entregue: </span>
+            <span class="_ak8l" id="snippet-ak8l-conv-2">Arquivo enviado com sucesso.</span>
+          </span>
+          <span data-testid="cell-frame-time" id="time-conv-2">10:02</span>
+        </div>
+
+        <!-- Conversation Row 3 (Alternative class selector _ak8i) -->
+        <div data-testid="cell-frame-container" id="row-conv-3">
+          <div class="_ak8i" id="snippet-ak8i-conv-3">Reunião confirmada para as 14h.</div>
+          <div data-testid="cell-frame-time" class="_ak8i" id="time-conv-3">09:40</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Chat (Media with and without caption, audio, stickers) -->
+    <div id="main">
+      <!-- Media without caption -->
+      <div class="message-in" data-id="msg-img-nocaption">
+        <div data-testid="msg-container" id="nocaption-container">
+          <img id="nocaption-img" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" style="width:100px; height:100px; display:block;">
+        </div>
+      </div>
+
+      <!-- Media with caption -->
+      <div class="message-out" data-id="msg-video-caption">
+        <div data-testid="msg-container" id="video-caption-container">
+          <video id="video-caption-content" src="blob:https://web.whatsapp.com/demo-vid" style="width:120px; height:80px; display:block;"></video>
+          <div class="copyable-text" id="video-caption-text">Vídeo da demonstração técnica</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
+'''
+
+def run_sidebar_hover_suite():
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=True)
+        page = browser.new_page()
+        page.set_content(html_sidebar_template)
+        page.wait_for_timeout(350)
+
+        def is_blurred(selector):
+            filt = page.eval_on_selector(selector, 'el => window.getComputedStyle(el).filter')
+            return 'blur' in filt and 'none' not in filt
+
+        def get_filter(selector):
+            return page.eval_on_selector(selector, 'el => window.getComputedStyle(el).filter')
+
+        # 1. Estado inicial de proteção da barra lateral e chat
+        assert is_blurred('#preview-conv-1'), f'preview-conv-1 must be blurred: {get_filter("#preview-conv-1")}'
+        assert is_blurred('#preview-conv-2'), f'preview-conv-2 must be blurred: {get_filter("#preview-conv-2")}'
+        assert is_blurred('#snippet-ak8i-conv-3'), f'snippet-ak8i-conv-3 must be blurred: {get_filter("#snippet-ak8i-conv-3")}'
+        assert is_blurred('#name-conv-1'), 'name-conv-1 must be blurred by hideNames'
+        assert is_blurred('#avatar-conv-1'), 'avatar-conv-1 must be blurred by hidePhotos'
+        assert not is_blurred('#time-conv-1'), 'time-conv-1 must not be blurred'
+        assert not is_blurred('#time-conv-3'), 'cell-frame-time with _ak8i must not be blurred'
+
+        # 2. Hover sobre a prévia da conversa 1
+        page.hover('#preview-conv-1')
+        page.wait_for_timeout(350)
+        assert not is_blurred('#preview-conv-1'), 'preview-conv-1 should be revealed on hover'
+        # Informações adjacentes permanecem borradas
+        assert is_blurred('#preview-conv-2'), 'preview-conv-2 must remain blurred'
+        assert is_blurred('#name-conv-1'), 'name-conv-1 must remain blurred during preview hover'
+        assert is_blurred('#avatar-conv-1'), 'avatar-conv-1 must remain blurred during preview hover'
+
+        # 3. Transição de hover para a prévia da conversa 2 (com sub-elementos last-msg-status e _ak8l)
+        page.hover('#snippet-ak8l-conv-2')
+        page.wait_for_timeout(350)
+        assert is_blurred('#preview-conv-1'), 'preview-conv-1 must re-blur'
+        assert not is_blurred('#snippet-ak8l-conv-2'), 'snippet-ak8l-conv-2 should be revealed on hover'
+        assert is_blurred('#name-conv-2'), 'name-conv-2 must remain blurred'
+
+        # 4. Hover sobre status da conversa 2
+        page.hover('#last-status-conv-2')
+        page.wait_for_timeout(350)
+        assert not is_blurred('#last-status-conv-2'), 'last-status-conv-2 should be revealed on hover'
+
+        # 5. Hover sobre _ak8i na conversa 3
+        page.hover('#snippet-ak8i-conv-3')
+        page.wait_for_timeout(350)
+        assert not is_blurred('#snippet-ak8i-conv-3'), 'snippet-ak8i-conv-3 should be revealed on hover'
+
+        # 6. Restauração do blur ao retirar o cursor da barra lateral
+        page.mouse.move(0, 0)
+        page.wait_for_timeout(350)
+        assert is_blurred('#preview-conv-1'), 'preview-conv-1 must re-blur when mouse leaves'
+        assert is_blurred('#preview-conv-2'), 'preview-conv-2 must re-blur when mouse leaves'
+        assert is_blurred('#snippet-ak8i-conv-3'), 'snippet-ak8i-conv-3 must re-blur when mouse leaves'
+
+        # 7. Mídia sem legenda no chat (Problema A)
+        assert is_blurred('#nocaption-img'), 'nocaption-img must be blurred initially'
+        page.hover('#nocaption-img')
+        page.wait_for_timeout(350)
+        assert not is_blurred('#nocaption-img'), 'nocaption-img must be completely revealed on hover'
+        page.mouse.move(0, 0)
+        page.wait_for_timeout(350)
+        assert is_blurred('#nocaption-img'), 'nocaption-img must re-blur when mouse leaves'
+
+        # 8. Mídia com legenda: hover sobre vídeo vs hover sobre legenda (Isolamento estrito)
+        page.hover('#video-caption-content')
+        page.wait_for_timeout(350)
+        assert not is_blurred('#video-caption-content'), 'video must be completely revealed on hover'
+        assert is_blurred('#video-caption-text'), 'caption text must remain strictly blurred while hovering video'
+
+        page.hover('#video-caption-text')
+        page.wait_for_timeout(350)
+        assert not is_blurred('#video-caption-text'), 'caption text must be revealed on hover'
+        assert is_blurred('#video-caption-content'), 'video must remain blurred while hovering caption'
+
+        # 9. Retirada do cursor restaura proteção completa
+        page.mouse.move(0, 0)
+        page.wait_for_timeout(350)
+        assert is_blurred('#video-caption-content'), 'video must re-blur'
+        assert is_blurred('#video-caption-text'), 'caption must re-blur'
+
+        # 10. Atualização dinâmica do DOM na barra lateral (Novas conversas recebidas)
+        page.evaluate('''() => {
+            const pane = document.querySelector('#pane-side');
+            const newRow = document.createElement('div');
+            newRow.setAttribute('data-testid', 'cell-frame-container');
+            newRow.innerHTML = '<span data-testid=\"cell-frame-subtitle\" id=\"dynamic-preview\">Nova prévia recebida em tempo real</span>';
+            pane.appendChild(newRow);
+        }''')
+        page.wait_for_timeout(100)
+        assert is_blurred('#dynamic-preview'), 'Dynamic preview must be blurred initially'
+        page.hover('#dynamic-preview')
+        page.wait_for_timeout(350)
+        assert not is_blurred('#dynamic-preview'), 'Dynamic preview must be revealed on hover'
+        page.mouse.move(0, 0)
+        page.wait_for_timeout(350)
+        assert is_blurred('#dynamic-preview'), 'Dynamic preview must re-blur when mouse leaves'
+
+        browser.close()
+        print('PR 2.0.3 Sidebar Previews and Media Matrix tests PASSED!')
+
+run_sidebar_hover_suite()
+`;
+
+                            const tempSidebarHoverTestPath = path.join(__dirname, 'temp_eval_sidebar_hover_test.py');
+                            fs.writeFileSync(tempSidebarHoverTestPath, pySidebarHoverSuiteScript, 'utf8');
+
+                            try {
+                              const sidebarTestOutput = execSync('python3 ' + tempSidebarHoverTestPath, { encoding: 'utf8' });
+                              assert.strictEqual(sidebarTestOutput.includes('PR 2.0.3 Sidebar Previews and Media Matrix tests PASSED!'), true);
+                              console.log('PR 2.0.3 Temporary Hover Reveal for Sidebar Previews & Media-Text Combinations PASSED!');
+                            } finally {
+                              if (fs.existsSync(tempSidebarHoverTestPath)) {
+                                fs.unlinkSync(tempSidebarHoverTestPath);
+                              }
+                            }
 
                             console.log('All automated tests executed successfully!');
                           });

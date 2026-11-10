@@ -14,7 +14,7 @@ Legenda de Status:
 
 ### 1. Manifesto e Estrutura Técnica
 - [x] **Manifest V3:** O arquivo `manifest.json` está em conformidade estrita com a especificação Manifest V3.
-- [x] **Versão do Projeto:** Definida como `2.0.2` no `manifest.json` e sincronizada em toda a documentação.
+- [x] **Versão do Projeto:** Definida como `2.0.3` no `manifest.json` e sincronizada em toda a documentação.
 - [x] **Internacionalização (i18n):** Pastas `_locales/pt_BR`, `_locales/en` e `_locales/es` estruturadas e validadas, com `default_locale: "pt_BR"` no `manifest.json`.
 - [x] **Permissões Mínimas Necessárias:** Apenas `"storage"` declarada em `permissions`, recurso `"commands"` para o atalho de teclado `Alt + Q` e injeção declarativa em `content_scripts.matches` (`https://web.whatsapp.com/*`). Zero uso de `host_permissions`.
 - [x] **Ausência de Código Remoto:** Nenhum script externo ou CDN é carregado; todas as dependências são 100% locais e empacotadas.
@@ -25,7 +25,7 @@ Legenda de Status:
 ## Estrutura Operacional por Natureza da Ação
 
 ### Categoria A — Concluído e Validado no Código e Repositório
-- [x] **Manifest V3 Validado:** `manifest.json` estruturado estritamente em Manifest V3 com versão `2.0.2` e metadados internacionalizados.
+- [x] **Manifest V3 Validado:** `manifest.json` estruturado estritamente em Manifest V3 com versão `2.0.3` e metadados internacionalizados.
 - [x] **Suporte Multilíngue (i18n):** Traduções implementadas para `pt_BR`, `en` e `es`, seleção manual no popup, persistência local e preservação do padrão `pt_BR`.
 - [x] **Inventário de Permissões Auditado:**
   - `permissions`: Apenas `storage` (sem excessos).
