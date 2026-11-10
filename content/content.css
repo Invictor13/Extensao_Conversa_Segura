@@ -152,24 +152,25 @@ body.vlv-hide-photos [data-icon="default-community"] {
 }
 
 /* --- 4. CONTACT, GROUP & SENDER NAMES --- */
-body.vlv-hide-names #side [data-testid="cell-frame-title"],
-body.vlv-hide-names #side span[title][dir="auto"],
 body.vlv-hide-names #pane-side [data-testid="cell-frame-title"],
-body.vlv-hide-names #pane-side span[title][dir="auto"],
-body.vlv-hide-names #main header span[title][dir="auto"],
+body.vlv-hide-names #pane-side [data-testid="cell-frame-title"] span[title][dir="auto"],
+body.vlv-hide-names #pane-side [data-testid="cell-frame-container"] [data-testid="cell-frame-title"],
 body.vlv-hide-names #main header [data-testid="chat-title"],
-body.vlv-hide-names #main header [data-testid="conversation-info-header"],
+body.vlv-hide-names #main header [data-testid="chat-title"] span[title][dir="auto"],
+body.vlv-hide-names #main header [data-testid="conversation-info-header"] span[title][dir="auto"],
+body.vlv-hide-names #main header [data-testid="conversation-info-header"] [role="button"] span[title][dir="auto"],
 body.vlv-hide-names #main .message-in span[dir="auto"]._ak8j,
 body.vlv-hide-names #main .message-in [data-testid="author"],
 body.vlv-hide-names [data-testid="status-v3-panel"] [data-testid="cell-frame-title"],
-body.vlv-hide-names [data-testid="status-v3-panel"] span[title][dir="auto"],
+body.vlv-hide-names [data-testid="status-v3-panel"] [data-testid="cell-frame-title"] span[title][dir="auto"],
 body.vlv-hide-names [data-testid="status-viewer-header"] span[title][dir="auto"],
 body.vlv-hide-names [data-testid="search-results"] [data-testid="cell-frame-title"],
-body.vlv-hide-names [data-testid="search-results"] span[title][dir="auto"],
-body.vlv-hide-names [data-testid="recent-search-list"] span,
-body.vlv-hide-names [data-testid="recent-search-item"] span,
-body.vlv-hide-names [data-testid="chat-list-search"] span,
-body.vlv-hide-names [data-testid="chatlist-header"] span {
+body.vlv-hide-names [data-testid="search-results"] [data-testid="cell-frame-title"] span[title][dir="auto"],
+body.vlv-hide-names [data-testid="recent-search-list"] [data-testid="cell-frame-title"],
+body.vlv-hide-names [data-testid="recent-search-item"] [data-testid="cell-frame-title"],
+body.vlv-hide-names [data-testid="drawer-right"] [data-testid="cell-frame-title"],
+body.vlv-hide-names [data-testid="drawer-right"] [data-testid="cell-frame-title"] span[title][dir="auto"],
+body.vlv-hide-names [data-testid="drawer-right"] [data-testid="contact-info-name"] {
   filter: blur(7px) !important;
   transition: filter 0.25s ease-in-out !important;
 }
@@ -467,13 +468,13 @@ body.vlv-hide-media [data-testid="media-viewer"] canvas {
 
   /* Row container hover reveals contact / group names */
   body.vlv-hide-names #pane-side [data-testid="cell-frame-container"]:hover [data-testid="cell-frame-title"],
-  body.vlv-hide-names #pane-side [data-testid="cell-frame-container"]:hover span[title][dir="auto"],
+  body.vlv-hide-names #pane-side [data-testid="cell-frame-container"]:hover [data-testid="cell-frame-title"] span[title][dir="auto"],
   body.vlv-hide-names #pane-side div[role="listitem"]:hover [data-testid="cell-frame-title"],
-  body.vlv-hide-names #pane-side div[role="listitem"]:hover span[title][dir="auto"],
+  body.vlv-hide-names #pane-side div[role="listitem"]:hover [data-testid="cell-frame-title"] span[title][dir="auto"],
   body.vlv-hide-names #pane-side div[role="row"]:hover [data-testid="cell-frame-title"],
-  body.vlv-hide-names #pane-side div[role="row"]:hover span[title][dir="auto"],
+  body.vlv-hide-names #pane-side div[role="row"]:hover [data-testid="cell-frame-title"] span[title][dir="auto"],
   body.vlv-hide-names #side [data-testid="cell-frame-container"]:hover [data-testid="cell-frame-title"],
-  body.vlv-hide-names #side [data-testid="cell-frame-container"]:hover span[title][dir="auto"],
+  body.vlv-hide-names #side [data-testid="cell-frame-container"]:hover [data-testid="cell-frame-title"] span[title][dir="auto"],
 
   /* Row container hover reveals profile photos / avatars */
   body.vlv-hide-photos #pane-side [data-testid="cell-frame-container"]:hover img,
