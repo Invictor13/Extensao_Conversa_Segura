@@ -1,8 +1,8 @@
 # Política de Privacidade — Tela Privada
 
-**Última atualização:** 25 de fevereiro de 2025
+**Última atualização:** 10 de novembro de 2026
 **Versão do documento:** 2.0.3
-**Status de publicação:** Documento oficial preparado para publicação pública (ex.: GitHub Pages)
+**Disponibilidade:** Documento mantido publicamente no repositório oficial do projeto
 
 ---
 
