@@ -172,6 +172,77 @@ body {
   animation: fadeInBadge 0.2s ease-in-out;
 }
 
+/* Sub-controls group for Auto-censor */
+.auto-censor-controls {
+  padding: 10px 14px 12px 14px;
+  background: rgba(255, 255, 255, 0.02);
+  border-top: 1px solid var(--vlv-border);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.option-sub-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.sub-label {
+  font-size: 12px;
+  color: var(--vlv-text-secondary);
+}
+
+.sub-controls-inline {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.form-select-small {
+  background: var(--vlv-surface);
+  color: var(--vlv-text-primary);
+  border: 1px solid var(--vlv-border);
+  border-radius: 6px;
+  padding: 4px 6px;
+  font-size: 12px;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.2s ease;
+}
+
+.form-select-small:focus {
+  border-color: var(--vlv-green);
+}
+
+.custom-timeout-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.input-number-small {
+  width: 52px;
+  background: var(--vlv-surface);
+  color: var(--vlv-text-primary);
+  border: 1px solid var(--vlv-border);
+  border-radius: 6px;
+  padding: 4px 4px;
+  font-size: 12px;
+  text-align: center;
+  outline: none;
+}
+
+.input-number-small:focus {
+  border-color: var(--vlv-green);
+}
+
+.unit-text {
+  font-size: 11px;
+  color: var(--vlv-text-secondary);
+}
+
 @keyframes fadeInBadge {
   from { opacity: 0; transform: translateY(-2px); }
   to { opacity: 1; transform: translateY(0); }

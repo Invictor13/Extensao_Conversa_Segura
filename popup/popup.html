@@ -105,6 +105,51 @@
       </div>
     </div>
 
+    <!-- Seção Censura Automática por Inatividade -->
+    <div class="section-title" data-i18n="sectionAutoCensor">Censura Automática</div>
+    <div class="card options-list">
+      <div class="option-item">
+        <div class="option-info">
+          <svg class="option-icon" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          <span class="option-label" data-i18n="filterAutoCensor">Bloqueio por Inatividade</span>
+        </div>
+        <label class="switch small" tabindex="0">
+          <input type="checkbox" id="autoCensorEnabled">
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <div id="autoCensorSubControls" class="auto-censor-controls" style="display: none;">
+        <!-- Seletor de Tempo de Inatividade -->
+        <div class="option-sub-row">
+          <span class="sub-label" data-i18n="labelInactivityTime">Tempo de inatividade:</span>
+          <div class="sub-controls-inline">
+            <select id="autoCensorTimeoutSelect" class="form-select-small">
+              <option value="30">30 s</option>
+              <option value="60">1 min</option>
+              <option value="120">2 min</option>
+              <option value="300">5 min</option>
+              <option value="custom" data-i18n="optCustomTime">Personalizado</option>
+            </select>
+            <div id="customTimeoutWrapper" class="custom-timeout-wrapper" style="display: none;">
+              <input type="number" id="autoCensorCustomInput" min="10" max="3600" class="input-number-small" value="60">
+              <span class="unit-text">s</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Seletor de Efeito Visual -->
+        <div class="option-sub-row">
+          <span class="sub-label" data-i18n="labelCensorEffect">Efeito visual:</span>
+          <select id="autoCensorEffectSelect" class="form-select-small">
+            <option value="blur" data-i18n="effectBlur">Blur Intenso</option>
+            <option value="darken" data-i18n="effectDarken">Escurecimento</option>
+            <option value="opaque" data-i18n="effectOpaque">Cobertura Opaca</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
     <!-- Seção Idioma -->
     <div class="section-title" data-i18n="sectionLanguage">Idioma</div>
     <div class="card options-list">
