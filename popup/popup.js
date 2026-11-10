@@ -18,7 +18,8 @@ document.addEventListener('DOMContentLoaded', () => {
     'hideNames',
     'hidePhotos',
     'hideMedia',
-    'particleEffect'
+    'particleEffect',
+    'autoCensorEnabled'
   ];
 
   const presetBtns = {
@@ -33,6 +34,14 @@ document.addEventListener('DOMContentLoaded', () => {
   const recoverFallbackBtn = document.getElementById('recoverFallbackBtn');
   const customBadge = document.getElementById('customBadge');
   const languageSelect = document.getElementById('languageSelect');
+
+  // Auto-censor UI elements
+  const autoCensorEnabledEl = document.getElementById('autoCensorEnabled');
+  const autoCensorSubControls = document.getElementById('autoCensorSubControls');
+  const autoCensorTimeoutSelect = document.getElementById('autoCensorTimeoutSelect');
+  const customTimeoutWrapper = document.getElementById('customTimeoutWrapper');
+  const autoCensorCustomInput = document.getElementById('autoCensorCustomInput');
+  const autoCensorEffectSelect = document.getElementById('autoCensorEffectSelect');
 
   let currentLanguage = 'pt_BR';
 
@@ -115,6 +124,28 @@ document.addEventListener('DOMContentLoaded', () => {
     if (customBadge) {
       customBadge.style.display = settings.protectionLevel === 'custom' ? 'inline-block' : 'none';
     }
+
+    // Auto-censor controls visibility and state
+    if (autoCensorSubControls) {
+      autoCensorSubControls.style.display = settings.autoCensorEnabled ? 'flex' : 'none';
+    }
+
+    if (autoCensorTimeoutSelect && customTimeoutWrapper && autoCensorCustomInput) {
+      const timeoutVal = typeof settings.autoCensorTimeout === 'number' ? settings.autoCensorTimeout : 60;
+      const standardPresets = [30, 60, 120, 300];
+      if (standardPresets.includes(timeoutVal)) {
+        autoCensorTimeoutSelect.value = String(timeoutVal);
+        customTimeoutWrapper.style.display = 'none';
+      } else {
+        autoCensorTimeoutSelect.value = 'custom';
+        customTimeoutWrapper.style.display = 'flex';
+        autoCensorCustomInput.value = timeoutVal;
+      }
+    }
+
+    if (autoCensorEffectSelect) {
+      autoCensorEffectSelect.value = settings.autoCensorEffect || 'blur';
+    }
   }
 
   // Load initial settings
@@ -130,11 +161,54 @@ document.addEventListener('DOMContentLoaded', () => {
     const el = document.getElementById(id);
     if (el) {
       el.addEventListener('change', (e) => {
-        const update = { [id]: e.target.checked, panicTriggered: false };
-        SettingsManager.set(update);
+        if (id === 'autoCensorEnabled') {
+          const isEnabled = e.target.checked;
+          if (autoCensorSubControls) {
+            autoCensorSubControls.style.display = isEnabled ? 'flex' : 'none';
+          }
+          SettingsManager.set({ autoCensorEnabled: isEnabled });
+        } else {
+          const update = { [id]: e.target.checked, panicTriggered: false };
+          SettingsManager.set(update);
+        }
       });
     }
   });
+
+  // Bind auto-censor timeout select
+  if (autoCensorTimeoutSelect) {
+    autoCensorTimeoutSelect.addEventListener('change', (e) => {
+      const val = e.target.value;
+      if (val === 'custom') {
+        if (customTimeoutWrapper) customTimeoutWrapper.style.display = 'flex';
+        const customSec = parseInt(autoCensorCustomInput.value, 10) || 60;
+        SettingsManager.set({ autoCensorTimeout: customSec });
+      } else {
+        if (customTimeoutWrapper) customTimeoutWrapper.style.display = 'none';
+        const sec = parseInt(val, 10);
+        SettingsManager.set({ autoCensorTimeout: sec });
+      }
+    });
+  }
+
+  // Bind auto-censor custom input
+  if (autoCensorCustomInput) {
+    autoCensorCustomInput.addEventListener('change', (e) => {
+      let sec = parseInt(e.target.value, 10);
+      if (isNaN(sec)) sec = 60;
+      sec = Math.min(Math.max(sec, 10), 3600);
+      e.target.value = sec;
+      SettingsManager.set({ autoCensorTimeout: sec });
+    });
+  }
+
+  // Bind auto-censor effect select
+  if (autoCensorEffectSelect) {
+    autoCensorEffectSelect.addEventListener('change', (e) => {
+      const effect = e.target.value;
+      SettingsManager.set({ autoCensorEffect: effect });
+    });
+  }
 
   // Bind language select change listener
   if (languageSelect) {

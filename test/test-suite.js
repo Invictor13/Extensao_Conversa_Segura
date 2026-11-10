@@ -16,6 +16,8 @@ global.window = global;
 global.window.matchMedia = function () {
   return { matches: false };
 };
+global.window.addEventListener = function () {};
+global.window.removeEventListener = function () {};
 
 global.document = {
   hidden: false,
@@ -31,13 +33,22 @@ global.document = {
   },
   getElementById: function (id) { return null; },
   createElement: function (tag) {
+    const classes = new Set();
     return {
       style: {},
+      classList: {
+        add: function (cls) { classes.add(cls); },
+        remove: function (cls) { classes.delete(cls); },
+        contains: function (cls) { return classes.has(cls); }
+      },
+      appendChild: function (child) {},
+      removeChild: function (child) {},
       getContext: function () { return null; },
       remove: function () {}
     };
   },
-  addEventListener: function () {}
+  addEventListener: function () {},
+  removeEventListener: function () {}
 };
 
 global.chrome = {
@@ -472,6 +483,9 @@ SettingsManager.applyPreset('basic', (basicSettings, basicErr) => {
             panicTriggered: false,
             panicBackupSettings: null,
             language: 'pt_BR',
+            autoCensorEnabled: false,
+            autoCensorTimeout: 60,
+            autoCensorEffect: 'blur',
             lastUpdated: 1600000000000
           });
           capturedOnInstalledListener({ reason: 'update' });
@@ -480,6 +494,9 @@ SettingsManager.applyPreset('basic', (basicSettings, basicErr) => {
           assert.strictEqual(bgStorage.hideMedia, false);
           assert.strictEqual(bgStorage.particleEffect, false);
           assert.strictEqual(bgStorage.language, 'pt_BR');
+          assert.strictEqual(bgStorage.autoCensorEnabled, false);
+          assert.strictEqual(bgStorage.autoCensorTimeout, 60);
+          assert.strictEqual(bgStorage.autoCensorEffect, 'blur');
           assert.strictEqual(bgStorage.lastUpdated, 1600000000000);
           assert.strictEqual(SettingsManager.detectPreset(bgStorage), 'basic');
           console.log('Update preserves Basic preset test PASSED!');
@@ -496,6 +513,9 @@ SettingsManager.applyPreset('basic', (basicSettings, basicErr) => {
             panicTriggered: false,
             panicBackupSettings: null,
             language: 'en',
+            autoCensorEnabled: true,
+            autoCensorTimeout: 120,
+            autoCensorEffect: 'darken',
             lastUpdated: 1650000000000
           });
           capturedOnInstalledListener({ reason: 'update' });
@@ -504,6 +524,9 @@ SettingsManager.applyPreset('basic', (basicSettings, basicErr) => {
           assert.strictEqual(bgStorage.hideNames, true);
           assert.strictEqual(bgStorage.hidePhotos, true);
           assert.strictEqual(bgStorage.language, 'en');
+          assert.strictEqual(bgStorage.autoCensorEnabled, true);
+          assert.strictEqual(bgStorage.autoCensorTimeout, 120);
+          assert.strictEqual(bgStorage.autoCensorEffect, 'darken');
           assert.strictEqual(bgStorage.lastUpdated, 1650000000000);
           assert.strictEqual(SettingsManager.detectPreset(bgStorage), 'maximum');
           console.log('Update preserves Maximum preset test PASSED!');
@@ -520,6 +543,9 @@ SettingsManager.applyPreset('basic', (basicSettings, basicErr) => {
             panicTriggered: false,
             panicBackupSettings: null,
             language: 'es',
+            autoCensorEnabled: false,
+            autoCensorTimeout: 300,
+            autoCensorEffect: 'opaque',
             lastUpdated: 1670000000000,
             userNotes: 'preserve-extra-keys',
             futureVersionFlag: 42
@@ -535,7 +561,7 @@ SettingsManager.applyPreset('basic', (basicSettings, basicErr) => {
           assert.strictEqual(SettingsManager.detectPreset(bgStorage), 'custom');
           console.log('Update preserves Custom and extra keys test PASSED!');
 
-          console.log('15. Testing onInstalled lifecycle: update writes ONLY missing keys (including migration of language)...');
+          console.log('15. Testing onInstalled lifecycle: update writes ONLY missing keys (including migration of language and auto-censor)...');
           resetStorageSpy({
             protectionLevel: 'advanced',
             hideMessages: true,
@@ -544,16 +570,22 @@ SettingsManager.applyPreset('basic', (basicSettings, basicErr) => {
             hidePhotos: false,
             hideMedia: true,
             lastUpdated: 1700000000000
-            // Missing particleEffect, panicTriggered, panicBackupSettings, language
+            // Missing particleEffect, panicTriggered, panicBackupSettings, language, autoCensor keys
           });
           capturedOnInstalledListener({ reason: 'update' });
           assert.strictEqual(setCalls.length, 1, 'Exactly one set call should occur for missing keys');
           const missingPayload = setCalls[0];
-          assert.deepStrictEqual(Object.keys(missingPayload).sort(), ['language', 'panicBackupSettings', 'panicTriggered', 'particleEffect'].sort());
+          assert.deepStrictEqual(
+            Object.keys(missingPayload).sort(),
+            ['autoCensorEffect', 'autoCensorEnabled', 'autoCensorTimeout', 'language', 'panicBackupSettings', 'panicTriggered', 'particleEffect'].sort()
+          );
           assert.strictEqual(missingPayload.particleEffect, true);
           assert.strictEqual(missingPayload.panicTriggered, false);
           assert.strictEqual(missingPayload.panicBackupSettings, null);
           assert.strictEqual(missingPayload.language, 'pt_BR');
+          assert.strictEqual(missingPayload.autoCensorEnabled, false);
+          assert.strictEqual(missingPayload.autoCensorTimeout, 60);
+          assert.strictEqual(missingPayload.autoCensorEffect, 'blur');
           assert.strictEqual(missingPayload.lastUpdated, undefined, 'Existing lastUpdated must NOT be in payload');
           assert.strictEqual(bgStorage.lastUpdated, 1700000000000, 'Existing lastUpdated must be preserved exactly');
           console.log('Missing-keys-only update test PASSED!');
@@ -568,6 +600,9 @@ SettingsManager.applyPreset('basic', (basicSettings, basicErr) => {
             hidePhotos: false,
             hideMedia: false,
             language: 'pt_BR',
+            autoCensorEnabled: false,
+            autoCensorTimeout: 60,
+            autoCensorEffect: 'blur',
             lastUpdated: fixedTimestamp
             // Missing particleEffect, panicTriggered, panicBackupSettings
           });
@@ -589,7 +624,10 @@ SettingsManager.applyPreset('basic', (basicSettings, basicErr) => {
             particleEffect: true,
             panicTriggered: false,
             panicBackupSettings: null,
-            language: 'pt_BR'
+            language: 'pt_BR',
+            autoCensorEnabled: false,
+            autoCensorTimeout: 60,
+            autoCensorEffect: 'blur'
             // lastUpdated is missing!
           });
           capturedOnInstalledListener({ reason: 'update' });
@@ -2007,6 +2045,225 @@ run_sidebar_hover_suite()
                             } finally {
                               if (fs.existsSync(tempSidebarHoverTestPath)) {
                                 fs.unlinkSync(tempSidebarHoverTestPath);
+                              }
+                            }
+
+                            // 32. PR04 — Auto Fullscreen Censorship Inactivity Suite (15 Mandatory Scenarios)
+                            console.log('32. Testing PR04 Auto Fullscreen Censorship Inactivity Suite (15 mandatory tests)...');
+
+                            // 1. Sanitization of the 3 new fields
+                            const testSanitized = SettingsManager.sanitizeSettings({
+                              autoCensorEnabled: 'true', // string instead of boolean -> default false
+                              autoCensorTimeout: 5,      // below min 10 -> clamped to 10
+                              autoCensorEffect: 'invalid' // invalid effect -> default blur
+                            });
+                            assert.strictEqual(testSanitized.autoCensorEnabled, false);
+                            assert.strictEqual(testSanitized.autoCensorTimeout, 10);
+                            assert.strictEqual(testSanitized.autoCensorEffect, 'blur');
+
+                            const testSanitizedMax = SettingsManager.sanitizeSettings({
+                              autoCensorEnabled: true,
+                              autoCensorTimeout: 5000,   // above max 3600 -> clamped to 3600
+                              autoCensorEffect: 'opaque'
+                            });
+                            assert.strictEqual(testSanitizedMax.autoCensorEnabled, true);
+                            assert.strictEqual(testSanitizedMax.autoCensorTimeout, 3600);
+                            assert.strictEqual(testSanitizedMax.autoCensorEffect, 'opaque');
+
+                            // Test darken effect validation
+                            const testSanitizedDarken = SettingsManager.sanitizeSettings({
+                              autoCensorEffect: 'darken'
+                            });
+                            assert.strictEqual(testSanitizedDarken.autoCensorEffect, 'darken');
+
+                            // Test partial sanitization
+                            const partialSanitized = SettingsManager.sanitizePartialSettings({
+                              autoCensorTimeout: '120',
+                              autoCensorEffect: 'darken'
+                            });
+                            assert.strictEqual(partialSanitized.autoCensorTimeout, 120);
+                            assert.strictEqual(partialSanitized.autoCensorEffect, 'darken');
+                            console.log('PR04 Test 1: Sanitization of auto-censor fields PASSED!');
+
+                            // Test inactivity watcher unit logic
+                            PrivacyEngine.updateSettings({
+                              autoCensorEnabled: false
+                            });
+                            assert.strictEqual(PrivacyEngine._isWatcherRunning(), false);
+                            assert.strictEqual(PrivacyEngine._hasActiveTimer(), false);
+                            assert.strictEqual(PrivacyEngine._triggerState.autoCensorActive, false);
+
+                            // Enable watcher
+                            PrivacyEngine.updateSettings({
+                              autoCensorEnabled: true,
+                              autoCensorTimeout: 10,
+                              autoCensorEffect: 'blur'
+                            });
+                            assert.strictEqual(PrivacyEngine._isWatcherRunning(), true);
+                            assert.strictEqual(PrivacyEngine._hasActiveTimer(), true);
+
+                            // Simulate inactivity timer firing
+                            PrivacyEngine.activateAutoCensor();
+                            assert.strictEqual(PrivacyEngine._triggerState.autoCensorActive, true);
+
+                            // Test unlock rule: FIRST valid interaction (mousemove) MUST unlock immediately
+                            PrivacyEngine.handleUserActivity({ type: 'mousemove' });
+                            assert.strictEqual(PrivacyEngine._triggerState.autoCensorActive, false, 'First mousemove must unlock immediately');
+                            assert.strictEqual(PrivacyEngine._hasActiveTimer(), true, 'Countdown timer must restart after unlock');
+
+                            // Test unlock by keyboard
+                            PrivacyEngine.activateAutoCensor();
+                            assert.strictEqual(PrivacyEngine._triggerState.autoCensorActive, true);
+                            PrivacyEngine.handleUserActivity({ type: 'keydown' });
+                            assert.strictEqual(PrivacyEngine._triggerState.autoCensorActive, false, 'Keyboard press must unlock immediately');
+
+                            // Test tab visibility changes: hidden cancels timer, visible restarts timer
+                            global.document.hidden = true;
+                            PrivacyEngine.handleVisibilityChange();
+                            assert.strictEqual(PrivacyEngine._hasActiveTimer(), false, 'Timer must be cancelled when tab is hidden');
+
+                            global.document.hidden = false;
+                            PrivacyEngine.handleVisibilityChange();
+                            assert.strictEqual(PrivacyEngine._hasActiveTimer(), true, 'Timer must restart when tab becomes visible');
+
+                            // Test no duplicate timers on repeated visibility toggling
+                            PrivacyEngine.handleVisibilityChange();
+                            PrivacyEngine.handleVisibilityChange();
+                            assert.strictEqual(PrivacyEngine._hasActiveTimer(), true);
+
+                            // Test turning off autoCensorEnabled cleans up watcher and active censor
+                            PrivacyEngine.activateAutoCensor();
+                            PrivacyEngine.updateSettings({ autoCensorEnabled: false });
+                            assert.strictEqual(PrivacyEngine._isWatcherRunning(), false);
+                            assert.strictEqual(PrivacyEngine._hasActiveTimer(), false);
+                            assert.strictEqual(PrivacyEngine._triggerState.autoCensorActive, false);
+
+                            // Playwright Real DOM Simulation for PR04 Fullscreen Overlay & Scenarios
+                            const pyAutoCensorScript = `
+import sys, json
+from playwright.sync_api import sync_playwright
+
+with open('content/content.css', 'r', encoding='utf-8') as f:
+    css_content = f.read()
+
+html_autocensor_template = f'''
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+{css_content}
+</style>
+</head>
+<body id="test-body" class="vlv-hide-messages vlv-hide-media">
+  <div id="app">
+    <div id="side">
+      <div id="pane-side">
+        <div data-testid="cell-frame-container" id="conv-1" style="width:300px; height:50px;">
+          <span data-testid="cell-frame-title" id="name-1">Victor</span>
+          <span data-testid="cell-frame-subtitle" id="preview-1">Mensagem importante</span>
+        </div>
+      </div>
+    </div>
+    <div id="main">
+      <div data-testid="msg-container" id="msg-1">
+        <div class="copyable-text" id="text-1">Texto confidencial</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Auto Censor Overlay Element -->
+  <div id="vlv-auto-censor-overlay" class="vlv-effect-blur">
+    <div class="vlv-censor-notice-card">
+      <h3 class="vlv-censor-notice-title" id="vlvOverlayTitle">Tela Protegida por Inatividade</h3>
+      <p class="vlv-censor-notice-sub" id="vlvOverlaySub">Mova o mouse ou pressione qualquer tecla para desbloquear</p>
+    </div>
+  </div>
+</body>
+</html>
+'''
+
+def run_autocensor_suite():
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=True)
+        page = browser.new_page()
+        page.set_content(html_autocensor_template)
+
+        overlay = page.locator('#vlv-auto-censor-overlay')
+
+        # 1. Verification of Overlay pointer-events: none (Penetration check)
+        pe = overlay.evaluate('el => window.getComputedStyle(el).pointerEvents')
+        assert pe == 'none', f'Overlay must have pointer-events: none, got {pe}'
+
+        # 2. Check z-index stacking order (999990)
+        zi = overlay.evaluate('el => window.getComputedStyle(el).zIndex')
+        assert zi == '999990', f'Overlay z-index must be 999990, got {zi}'
+
+        # 3. Initially overlay is inactive (opacity 0, visibility hidden)
+        op_init = overlay.evaluate('el => window.getComputedStyle(el).opacity')
+        vis_init = overlay.evaluate('el => window.getComputedStyle(el).visibility')
+        assert op_init == '0', f'Initial opacity must be 0, got {op_init}'
+        assert vis_init == 'hidden', f'Initial visibility must be hidden, got {vis_init}'
+
+        # 4. Activate Overlay (vlv-active)
+        page.eval_on_selector('#vlv-auto-censor-overlay', 'el => el.classList.add("vlv-active")')
+        page.wait_for_timeout(400)
+        op_active = overlay.evaluate('el => window.getComputedStyle(el).opacity')
+        vis_active = overlay.evaluate('el => window.getComputedStyle(el).visibility')
+        assert op_active == '1', f'Active opacity must be 1, got {op_active}'
+        assert vis_active == 'visible', f'Active visibility must be visible, got {vis_active}'
+
+        # 5. Test Effect 1: Blur
+        filt_blur = overlay.evaluate('el => window.getComputedStyle(el).backdropFilter || window.getComputedStyle(el).webkitBackdropFilter')
+        assert 'blur' in filt_blur, f'Blur effect must have backdrop-filter blur, got {filt_blur}'
+
+        # 6. Test Effect 2: Darken
+        page.eval_on_selector('#vlv-auto-censor-overlay', 'el => { el.className = "vlv-active vlv-effect-darken"; }')
+        page.wait_for_timeout(100)
+        bg_darken = overlay.evaluate('el => window.getComputedStyle(el).backgroundColor')
+        assert 'rgba(0, 0, 0' in bg_darken or 'rgb(0, 0, 0' in bg_darken, f'Darken effect must have dark background, got {bg_darken}'
+
+        # 7. Test Effect 3: Opaque
+        page.eval_on_selector('#vlv-auto-censor-overlay', 'el => { el.className = "vlv-active vlv-effect-opaque"; }')
+        page.wait_for_timeout(100)
+        bg_opaque = overlay.evaluate('el => window.getComputedStyle(el).backgroundColor')
+        # #0b141a in rgb is rgb(11, 20, 26)
+        assert '11, 20, 26' in bg_opaque, f'Opaque effect must have #0b141a background, got {bg_opaque}'
+
+        # 8. Test Coverage: bounding rect must match viewport 100%
+        rect = overlay.evaluate('''el => {
+            const r = el.getBoundingClientRect();
+            return { top: r.top, left: r.left, width: r.width, height: r.height, winW: window.innerWidth, winH: window.innerHeight };
+        }''')
+        assert rect['top'] == 0 and rect['left'] == 0
+        assert rect['width'] == rect['winW'] and rect['height'] == rect['winH'], f'Overlay must cover entire window, got {rect}'
+
+        # 9. Test Hover Reveal functionality during and after auto-censor
+        # Deactivate overlay
+        page.eval_on_selector('#vlv-auto-censor-overlay', 'el => el.classList.remove("vlv-active")')
+        page.wait_for_timeout(400)
+
+        # Hover message text: hover reveal must work normally
+        page.hover('#text-1')
+        page.wait_for_timeout(350)
+        filt_hover = page.eval_on_selector('#msg-1', 'el => window.getComputedStyle(el).filter')
+        assert 'none' in filt_hover or filt_hover == 'none', f'Hover reveal must work after unlocking, got {filt_hover}'
+
+        browser.close()
+        print('PR04 Auto Fullscreen Censorship Playwright Real DOM tests PASSED!')
+
+run_autocensor_suite()
+`;
+
+                            const tempAutoCensorTestPath = path.join(__dirname, 'temp_eval_autocensor_suite_test.py');
+                            fs.writeFileSync(tempAutoCensorTestPath, pyAutoCensorScript, 'utf8');
+
+                            try {
+                              const autoCensorTestOutput = execSync('python3 ' + tempAutoCensorTestPath, { encoding: 'utf8' });
+                              assert.strictEqual(autoCensorTestOutput.includes('PR04 Auto Fullscreen Censorship Playwright Real DOM tests PASSED!'), true);
+                              console.log('PR04 Auto Fullscreen Censorship Playwright Real DOM tests PASSED!');
+                            } finally {
+                              if (fs.existsSync(tempAutoCensorTestPath)) {
+                                fs.unlinkSync(tempAutoCensorTestPath);
                               }
                             }
 

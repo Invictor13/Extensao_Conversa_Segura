@@ -24,11 +24,15 @@
     panicTriggered: false,
     panicBackupSettings: null,
     language: 'pt_BR',
+    autoCensorEnabled: false,
+    autoCensorTimeout: 60,
+    autoCensorEffect: 'blur',
     lastUpdated: Date.now()
   };
 
   const VALID_LEVELS = ['basic', 'advanced', 'maximum', 'custom'];
   const VALID_LANGUAGES = ['pt_BR', 'en', 'es'];
+  const VALID_EFFECTS = ['blur', 'darken', 'opaque'];
 
   const FILTER_KEYS = [
     'hideMessages',
@@ -127,6 +131,28 @@
     } else {
       sanitized.language = 'pt_BR';
     }
+
+    if (typeof input.autoCensorEnabled === 'boolean') {
+      sanitized.autoCensorEnabled = input.autoCensorEnabled;
+    } else {
+      sanitized.autoCensorEnabled = false;
+    }
+
+    if (typeof input.autoCensorTimeout === 'number' && Number.isInteger(input.autoCensorTimeout)) {
+      sanitized.autoCensorTimeout = Math.min(Math.max(input.autoCensorTimeout, 10), 3600);
+    } else if (typeof input.autoCensorTimeout === 'string' && /^\d+$/.test(input.autoCensorTimeout)) {
+      const parsed = parseInt(input.autoCensorTimeout, 10);
+      sanitized.autoCensorTimeout = Math.min(Math.max(parsed, 10), 3600);
+    } else {
+      sanitized.autoCensorTimeout = 60;
+    }
+
+    if (typeof input.autoCensorEffect === 'string' && VALID_EFFECTS.includes(input.autoCensorEffect)) {
+      sanitized.autoCensorEffect = input.autoCensorEffect;
+    } else {
+      sanitized.autoCensorEffect = 'blur';
+    }
+
     if (typeof input.lastUpdated === 'number') sanitized.lastUpdated = input.lastUpdated;
 
     // Recalculate protection level dynamically
@@ -160,6 +186,21 @@
     }
     if (Object.prototype.hasOwnProperty.call(partialInput, 'language')) {
       sanitizedPartial.language = VALID_LANGUAGES.includes(partialInput.language) ? partialInput.language : 'pt_BR';
+    }
+    if (typeof partialInput.autoCensorEnabled === 'boolean') {
+      sanitizedPartial.autoCensorEnabled = partialInput.autoCensorEnabled;
+    }
+    if (Object.prototype.hasOwnProperty.call(partialInput, 'autoCensorTimeout')) {
+      let timeoutVal = partialInput.autoCensorTimeout;
+      if (typeof timeoutVal === 'string' && /^\d+$/.test(timeoutVal)) {
+        timeoutVal = parseInt(timeoutVal, 10);
+      }
+      if (typeof timeoutVal === 'number' && Number.isInteger(timeoutVal)) {
+        sanitizedPartial.autoCensorTimeout = Math.min(Math.max(timeoutVal, 10), 3600);
+      }
+    }
+    if (typeof partialInput.autoCensorEffect === 'string' && VALID_EFFECTS.includes(partialInput.autoCensorEffect)) {
+      sanitizedPartial.autoCensorEffect = partialInput.autoCensorEffect;
     }
 
     sanitizedPartial.lastUpdated = Date.now();

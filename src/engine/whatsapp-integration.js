@@ -222,6 +222,67 @@
     }
   }
 
+  let overlayElement = null;
+
+  /**
+   * Creates or updates the fullscreen auto-censor overlay.
+   * Uses pointer-events: none and subtle unlock instructions.
+   * @param {boolean} active
+   * @param {string} effect ('blur' | 'darken' | 'opaque')
+   * @param {string} [language]
+   */
+  function applyAutoCensor(active, effect, language) {
+    const doc = typeof document !== 'undefined' ? document : null;
+    if (!doc || !doc.body) return;
+
+    if (!overlayElement) {
+      overlayElement = doc.getElementById('vlv-auto-censor-overlay');
+      if (!overlayElement) {
+        overlayElement = doc.createElement('div');
+        overlayElement.id = 'vlv-auto-censor-overlay';
+
+        const card = doc.createElement('div');
+        card.className = 'vlv-censor-notice-card';
+
+        const iconSvg = `
+          <svg class="vlv-censor-notice-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+          </svg>
+        `;
+        card.innerHTML = iconSvg +
+          '<h3 class="vlv-censor-notice-title" id="vlvOverlayTitle"></h3>' +
+          '<p class="vlv-censor-notice-sub" id="vlvOverlaySub"></p>';
+
+        overlayElement.appendChild(card);
+        doc.body.appendChild(overlayElement);
+      }
+    }
+
+    // Update localized text if PrivacyI18n is available
+    const lang = language || 'pt_BR';
+    const titleEl = doc.getElementById('vlvOverlayTitle');
+    const subEl = doc.getElementById('vlvOverlaySub');
+    if (typeof PrivacyI18n !== 'undefined' && PrivacyI18n.t) {
+      if (titleEl) titleEl.textContent = PrivacyI18n.t('overlayNoticeTitle', lang);
+      if (subEl) subEl.textContent = PrivacyI18n.t('overlayNoticeSubtitle', lang);
+    } else {
+      if (titleEl) titleEl.textContent = 'Tela Protegida por Inatividade';
+      if (subEl) subEl.textContent = 'Mova o mouse ou pressione qualquer tecla para desbloquear';
+    }
+
+    // Reset effect classes
+    overlayElement.classList.remove('vlv-effect-blur', 'vlv-effect-darken', 'vlv-effect-opaque');
+    const selectedEffect = effect === 'darken' || effect === 'opaque' ? effect : 'blur';
+    overlayElement.classList.add('vlv-effect-' + selectedEffect);
+
+    if (active) {
+      overlayElement.classList.add('vlv-active');
+    } else {
+      overlayElement.classList.remove('vlv-active');
+    }
+  }
+
   /**
    * Verifies if WhatsApp Web interface DOM is present.
    * @returns {boolean}
@@ -233,6 +294,7 @@
   return {
     SELECTORS,
     applyClasses,
+    applyAutoCensor,
     isWhatsAppWebDetected
   };
 });

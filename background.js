@@ -23,6 +23,9 @@ const DEFAULT_SETTINGS = {
   panicTriggered: false,
   panicBackupSettings: null,
   language: 'pt_BR',
+  autoCensorEnabled: false,
+  autoCensorTimeout: 60,
+  autoCensorEffect: 'blur',
   lastUpdated: Date.now()
 };
 
