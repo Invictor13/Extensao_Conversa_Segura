@@ -36,24 +36,25 @@
     ],
     // Contact, Group & Sender Names (Sidebar, Header, Search Results, Group Messages, Recent Searches, Status Panel/Viewer)
     names: [
-      '#side [data-testid="cell-frame-title"]',
-      '#side span[title][dir="auto"]',
       '#pane-side [data-testid="cell-frame-title"]',
-      '#pane-side span[title][dir="auto"]',
-      '#main header span[title][dir="auto"]',
+      '#pane-side [data-testid="cell-frame-title"] span[title][dir="auto"]',
+      '#pane-side [data-testid="cell-frame-container"] [data-testid="cell-frame-title"]',
       '#main header [data-testid="chat-title"]',
-      '#main header [data-testid="conversation-info-header"]',
+      '#main header [data-testid="chat-title"] span[title][dir="auto"]',
+      '#main header [data-testid="conversation-info-header"] span[title][dir="auto"]',
+      '#main header [data-testid="conversation-info-header"] [role="button"] span[title][dir="auto"]',
       '#main .message-in span[dir="auto"]._ak8j',
       '#main .message-in [data-testid="author"]',
       '[data-testid="status-v3-panel"] [data-testid="cell-frame-title"]',
-      '[data-testid="status-v3-panel"] span[title][dir="auto"]',
+      '[data-testid="status-v3-panel"] [data-testid="cell-frame-title"] span[title][dir="auto"]',
       '[data-testid="status-viewer-header"] span[title][dir="auto"]',
       '[data-testid="search-results"] [data-testid="cell-frame-title"]',
-      '[data-testid="search-results"] span[title][dir="auto"]',
-      '[data-testid="recent-search-list"] span',
-      '[data-testid="recent-search-item"] span',
-      '[data-testid="chat-list-search"] span',
-      '[data-testid="chatlist-header"] span'
+      '[data-testid="search-results"] [data-testid="cell-frame-title"] span[title][dir="auto"]',
+      '[data-testid="recent-search-list"] [data-testid="cell-frame-title"]',
+      '[data-testid="recent-search-item"] [data-testid="cell-frame-title"]',
+      '[data-testid="drawer-right"] [data-testid="cell-frame-title"]',
+      '[data-testid="drawer-right"] [data-testid="cell-frame-title"] span[title][dir="auto"]',
+      '[data-testid="drawer-right"] [data-testid="contact-info-name"]'
     ],
     // Profile photos and avatars (Sidebar, Header, Search Results, Recent Searches, Status Avatars & SVG images)
     photos: [

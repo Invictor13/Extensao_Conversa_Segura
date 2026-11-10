@@ -2267,6 +2267,47 @@ run_autocensor_suite()
                               }
                             }
 
+
+
+
+                            // 33. Testing PR04.1 Privacy Selectors & Popup Refinements (Mandatory Scenarios)
+                            console.log('33. Testing PR04.1 Privacy Selectors & Popup Refinements (Mandatory Scenarios)...');
+
+                            // Test 33.1: Strict 1:1 Parity between SELECTORS.names and content.css Section 4
+                            const contentCssPR041 = fs.readFileSync(path.join(__dirname, '../content/content.css'), 'utf8');
+                            const WhatsAppIntegrationModule = require('../src/engine/whatsapp-integration.js');
+                            const integrationNames = WhatsAppIntegrationModule.SELECTORS.names;
+
+                            const section4Regex = /\/\* --- 4\. CONTACT, GROUP & SENDER NAMES --- \*\/([\s\S]*?)\{\s*filter:\s*blur\(7px\)/;
+                            const section4Match = contentCssPR041.match(section4Regex);
+                            assert.ok(section4Match, 'Section 4 in content.css must exist');
+                            const cssNames = section4Match[1]
+                              .split(',')
+                              .map(s => s.trim().replace(/^body\.vlv-hide-names\s+/, ''))
+                              .filter(Boolean);
+
+                            assert.strictEqual(integrationNames.length, cssNames.length, 'Count of names selectors in integration and CSS must match 1:1');
+                            for (let i = 0; i < integrationNames.length; i++) {
+                              assert.strictEqual(integrationNames[i], cssNames[i], 'Selector at index ' + i + ' must match exactly');
+                            }
+                            console.log('PR04.1 Test 1: Selector 1:1 Parity PASSED (' + integrationNames.length + ' selectors)!');
+
+                            // Test 33.2 - 33.5: Playwright Real DOM Verification
+                            const pyPr041Script = ["import os","import sys","from playwright.sync_api import sync_playwright","","def run_pr041_suite():","    with sync_playwright() as p:","        browser = p.chromium.launch(headless=True)","        page = browser.new_page()","        css_content = open('content/content.css').read()","        popup_path = os.path.abspath('popup/popup.html')","","        # 1. WhatsApp DOM isolation & non-overreach test","        html_content = f'''<!DOCTYPE html>","        <html><head><style>{css_content}</style></head>","        <body class=\"vlv-hide-names\">","          <nav id=\"side-nav\" role=\"navigation\"><div class=\"nav-item\">Chats</div></nav>","          <div role=\"tablist\"><button role=\"tab\">Conversas</button><button role=\"tab\">Status</button></div>","          <div id=\"main\">","            <header>","              <div data-testid=\"chat-title\"><span title=\"Alice Bob\" dir=\"auto\">Alice Bob</span></div>","              <div data-testid=\"conversation-info-header\"><button role=\"button\"><span title=\"Alice Bob\" dir=\"auto\">Alice Bob</span></button></div>","              <div class=\"header-tools\"><button class=\"search-btn\">Search</button></div>","              <img src=\"https://example.com/avatar.jpg\" data-testid=\"chat-avatar\" class=\"header-avatar\">","            </header>","          </div>","          <div id=\"pane-side\">","            <div data-testid=\"cell-frame-container\">","              <div data-testid=\"cell-frame-title\"><span title=\"Group 1\" dir=\"auto\">Group 1</span></div>","              <div data-testid=\"cell-frame-subtitle\">Last message preview</div>","              <img src=\"https://example.com/group.jpg\" data-testid=\"avatar-tile\">","            </div>","          </div>","          <div data-testid=\"drawer-right\">","            <div data-testid=\"contact-info-name\">Alice Full Name</div>","          </div>","        </body></html>'''","        page.set_content(html_content)","","        # Verify navigation and tabs are NOT blurred","        nav_filter = page.evaluate(\"() => window.getComputedStyle(document.getElementById('side-nav')).filter\")","        assert 'blur' not in nav_filter, f'Navigation must not be blurred: {nav_filter}'","        tab_el = page.query_selector(\"[role='tablist']\")","        tab_filter = page.evaluate(\"(el) => window.getComputedStyle(el).filter\", tab_el)","        assert 'blur' not in tab_filter, f'Tabs must not be blurred: {tab_filter}'","","        # Verify chat title is blurred","        title_el = page.query_selector(\"[data-testid='chat-title'] span\")","        title_filter = page.evaluate(\"(el) => window.getComputedStyle(el).filter\", title_el)","        assert 'blur(7px)' in title_filter, f'Chat title span must be blurred: {title_filter}'","","        # Verify header avatar is NOT blurred when only hide-names is active","        header_avatar_el = page.query_selector('.header-avatar')","        header_avatar_filter = page.evaluate(\"(el) => window.getComputedStyle(el).filter\", header_avatar_el)","        assert 'blur' not in header_avatar_filter, f'Header avatar must not be blurred when only hide-names is active: {header_avatar_filter}'","","        # Verify pane-side title is blurred","        pane_title_el = page.query_selector(\"#pane-side [data-testid='cell-frame-title'] span\")","        pane_title_filter = page.evaluate(\"(el) => window.getComputedStyle(el).filter\", pane_title_el)","        assert 'blur(7px)' in pane_title_filter, f'Pane-side title must be blurred: {pane_title_filter}'","","        # Verify pane-side avatar is NOT blurred when only hide-names is active","        pane_avatar_el = page.query_selector('#pane-side img')","        pane_avatar_filter = page.evaluate(\"(el) => window.getComputedStyle(el).filter\", pane_avatar_el)","        assert 'blur' not in pane_avatar_filter, f'Pane-side avatar must not be blurred when only hide-names is active: {pane_avatar_filter}'","","        # Test hide-photos independent activation","        page.evaluate(\"() => { document.body.className = 'vlv-hide-photos'; }\")","        page.wait_for_timeout(350)","        photo_filter = page.evaluate(\"(el) => window.getComputedStyle(el).filter\", header_avatar_el)","        assert 'blur(10px)' in photo_filter, f'Avatar must be blurred when hide-photos is active: {photo_filter}'","        title_no_filter = page.evaluate(\"(el) => window.getComputedStyle(el).filter\", title_el)","        assert 'blur' not in title_no_filter, f'Chat title must not be blurred when hide-photos is active: {title_no_filter}'","","        # 2. Popup dimension & layout test","        page.goto(f'file://{popup_path}')","        init_height = page.evaluate(\"document.body.scrollHeight\")","        assert init_height <= 600, f'Standard popup height must be <= 600px, was {init_height}'","","        page.evaluate('''() => {","            const ac = document.getElementById('autoCensorSubControls');","            if (ac) ac.style.display = 'flex';","        }''')","        ac_height = page.evaluate(\"document.body.scrollHeight\")","        assert ac_height <= 600, f'Popup with AutoCensor open must be <= 600px, was {ac_height}'","","        page.evaluate('''() => {","            const banner = document.getElementById('panicBanner');","            if (banner) banner.style.display = 'block';","        }''')","        panic_height = page.evaluate(\"document.body.scrollHeight\")","        assert panic_height <= 600, f'Popup with Panic banner must be <= 600px, was {panic_height}'","","        # Verify footer links exist and are accessible","        footer_info = page.evaluate('''() => {","            const about = document.querySelector('.about-section');","            const links = Array.from(document.querySelectorAll('.about-link')).map(a => a.href);","            return {","                exists: !!about,","                display: window.getComputedStyle(about).display,","                links: links","            };","        }''')","        assert footer_info['exists'] and footer_info['display'] != 'none', 'About footer must exist and be visible'","        assert any('github.com' in l for l in footer_info['links']), 'GitHub link must be present'","        assert any('linkedin.com' in l for l in footer_info['links']), 'LinkedIn link must be present'","","        browser.close()","        print('PR04.1 Privacy Selectors & Popup Refinements Real DOM tests PASSED!')","","run_pr041_suite()"].join('\n');
+
+                            const tempPr041TestPath = path.join(__dirname, 'temp_eval_pr041_suite_test.py');
+                            fs.writeFileSync(tempPr041TestPath, pyPr041Script, 'utf8');
+
+                            try {
+                              const pr041TestOutput = execSync('python3 ' + tempPr041TestPath, { encoding: 'utf8' });
+                              assert.strictEqual(pr041TestOutput.includes('PR04.1 Privacy Selectors & Popup Refinements Real DOM tests PASSED!'), true);
+                              console.log('PR04.1 Privacy Selectors & Popup Refinements Real DOM tests PASSED!');
+                            } finally {
+                              if (fs.existsSync(tempPr041TestPath)) {
+                                fs.unlinkSync(tempPr041TestPath);
+                              }
+                            }
+
                             console.log('All automated tests executed successfully!');
                           });
                         });
