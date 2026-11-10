@@ -1,7 +1,7 @@
 # Política de Privacidade — Tela Privada
 
-**Última atualização:** 06 de novembro de 2026
-**Versão do documento:** 2.0.0
+**Última atualização:** 25 de fevereiro de 2025
+**Versão do documento:** 2.0.3
 **Status de publicação:** Documento oficial preparado para publicação pública (ex.: GitHub Pages)
 
 ---
@@ -19,7 +19,7 @@ A extensão **Tela Privada** (anteriormente referenciada internamente como Priva
 
 ## 2. Finalidade da Extensão
 
-A **Tela Privada** tem como finalidade estrita e exclusiva oferecer **proteção visual de tela** para usuários do WhatsApp Web (`web.whatsapp.com`). Seu objetivo prático é mitigar o risco de leitura indiscreta por pessoas ao redor (conhecido como *shoulder surfing*) em ambientes públicos, compartilhados, coworkings ou escritórios corporativos, mediante aplicação local de estilos CSS que desfocam elementos gráficos e textuais da interface.
+A **Tela Privada** tem como finalidade estrita e exclusiva oferecer **proteção visual de tela** para usuários do WhatsApp Web (`web.whatsapp.com`). Seu objetivo prático é mitigar o risco de leitura indiscreta por pessoas ao redor (conhecido como *shoulder surfing*) em ambientes públicos, compartilhados, coworkings ou escritórios corporativos, mediante aplicação local de estilos CSS que desfocam elementos gráficos e textuais da interface e oferecem censura por inatividade.
 
 ---
 
@@ -30,7 +30,7 @@ A extensão foi projetada sob o princípio de Privacidade por Padrão (*Privacy 
 1. **Conteúdo de Mensagens:** A extensão **NÃO lê, NÃO extrai, NÃO copia, NÃO analisa e NÃO processa** o texto, áudio, anexo ou conteúdo de nenhuma mensagem trocada no WhatsApp Web.
 2. **Dados Pessoais e de Contatos:** A extensão **NÃO coleta, NÃO armazena e NÃO transmite** nomes, números de telefone, fotos de perfil, histórico de conversas, lista de contatos ou qualquer metadado de comunicação.
 3. **Dados de Navegação:** A extensão **NÃO monitora, NÃO registra e NÃO acessa** histórico de navegação, abas não relacionadas, cookies, credenciais de autenticação ou tokens de sessão.
-4. **Manipulação do DOM:** A interação com a página do WhatsApp Web restringe-se estritamente à consulta de classes e nós estruturais do DOM para aplicação/remoção de classes CSS locais (ex.: `vlv-hide-messages`, `vlv-hide-previews`, `vlv-hide-names`, `vlv-hide-photos`, `vlv-hide-media`).
+4. **Manipulação do DOM:** A interação com a página do WhatsApp Web restringe-se estritamente à consulta de classes e nós estruturais do DOM para aplicação/remoção de classes CSS locais (ex.: `vlv-hide-messages`, `vlv-hide-previews`, `vlv-hide-names`, `vlv-hide-photos`, `vlv-hide-media`, e overlay de censura por inatividade `#vlv-auto-censor-overlay`).
 
 ---
 
@@ -38,7 +38,7 @@ A extensão foi projetada sob o princípio de Privacidade por Padrão (*Privacy 
 
 Toda e qualquer persistência de dados ocorre exclusivamente no dispositivo do próprio usuário por meio da API `chrome.storage.local` do navegador.
 
-### Dados estritamente armazenados:
+### Chaves e dados estritamente armazenados:
 - `protectionLevel`: Nível de proteção ativo (`"basic"`, `"advanced"`, `"maximum"` ou `"custom"`).
 - `hideMessages`: Booleano para desfoque de mensagens no chat aberto (`true` ou `false`).
 - `hidePreviews`: Booleano para desfoque das prévias de mensagem na barra lateral (`true` ou `false`).
@@ -46,6 +46,10 @@ Toda e qualquer persistência de dados ocorre exclusivamente no dispositivo do p
 - `hidePhotos`: Booleano para desfoque de fotos de perfil e avatares (`true` ou `false`).
 - `hideMedia`: Booleano para desfoque de imagens, vídeos e anexos (`true` ou `false`).
 - `particleEffect`: Booleano para ativação/desativação da animação Canvas de partículas (`true` ou `false`).
+- `autoCensorEnabled`: Booleano para ativação da censura automática por inatividade (`true` ou `false`).
+- `autoCensorTimeout`: Número inteiro que define o tempo de inatividade em segundos (entre 10 e 3600 segundos; padrão: 60).
+- `autoCensorEffect`: String que define o efeito visual da censura de inatividade (`"blur"`, `"darken"` ou `"opaque"`).
+- `language`: Código do idioma de interface selecionado pelo usuário (`"pt_BR"`, `"en"` ou `"es"`).
 - `panicTriggered`: Booleano indicador do estado do Modo de Emergência (`true` ou `false`).
 - `panicBackupSettings`: Objeto temporário de snapshot contendo as preferências anteriores para restauração após saída do Modo de Emergência, ou `null`.
 - `lastUpdated`: Timestamp numérico (`Date.now()`) indicando a data/hora da última alteração de configuração no dispositivo.
@@ -67,7 +71,7 @@ Nenhum dado pessoal, texto de conversas ou informações sensíveis são gravado
 O manifesto da extensão (`manifest.json`) declara o conjunto estritamente mínimo e indispensável para seu funcionamento:
 
 1. **`permissions: ["storage"]`**
-   - **Justificativa:** Necessária para permitir que o usuário salve suas opções de filtro visual e preferências no painel popup entre sessões de navegação, via `chrome.storage.local`.
+   - **Justificativa:** Necessária para permitir que o usuário salve suas opções de filtro visual, tempo de inatividade, idioma e preferências no painel popup entre sessões de navegação, via `chrome.storage.local`.
 2. **`content_scripts` no domínio `https://web.whatsapp.com/*`**
    - **Justificativa:** Declaração necessária para injetar localmente a folha de estilos (`content.css`) e os scripts de controle de exibição na aba oficial do WhatsApp Web.
    - *Nota Técnica de Conformidade:* A extensão **não utiliza** nem declara `host_permissions` amplas ou opcionais no manifesto. A injeção ocorre exclusivamente de forma declarativa via `content_scripts.matches`.
@@ -79,7 +83,7 @@ O manifesto da extensão (`manifest.json`) declara o conjunto estritamente míni
 ## 7. Escopo e Limitações da Plataforma
 
 - **Plataforma Atualmente Suportada:** A extensão funciona **exclusivamente no WhatsApp Web** (`https://web.whatsapp.com/*`).
-- **Outras Ferramentas e Expansões Futuras:** Integrações com outras ferramentas (como Microsoft Teams, Slack ou outros comunicadores web) são possibilidades conceituais futuras que dependem de estudos de viabilidade técnica. **Na versão atual, NÃO há suporte nem funcionalidade implementada para qualquer serviço fora do WhatsApp Web.**
+- **Outras Ferramentas e Expansões Futuras:** Integrações com outras ferramentas (como Microsoft Teams, Slack ou outros comunicadores web) são possibilidades conceituais de roadmap que dependem de estudos de viabilidade técnica. **Na versão atual, NÃO há suporte nem funcionalidade implementada para qualquer serviço fora do WhatsApp Web.**
 
 ---
 
@@ -87,7 +91,7 @@ O manifesto da extensão (`manifest.json`) declara o conjunto estritamente míni
 
 A **Tela Privada** é uma salvaguarda contra observação casual e não substitui medidas abrangentes de segurança da informação:
 
-1. **Natureza Estritamente Visual:** A proteção opera mediante classes e propriedades CSS no navegador local (efeito de desfoque/blur e revelação sob o cursor do mouse).
+1. **Natureza Estritamente Visual:** A proteção opera mediante classes e propriedades CSS no navegador local (efeito de desfoque/blur, overlay de inatividade e revelação sob o cursor do mouse).
 2. **Não é Criptografia:** A extensão não adiciona nem altera a camada criptográfica das comunicações, a qual permanece regida exclusivamente pelo protocolo do WhatsApp.
 3. **Não Impede Softwares Locais:** A extensão não impede capturas de tela (*screenshots*), gravações de tela pelo sistema operacional ou fotos tiradas com aparelhos externos (como câmeras de celulares).
 4. **Não Protege contra Malwares:** A extensão não detecta, não bloqueia e não remove malwares, vírus, cavalos de troia, *keyloggers* ou *spywares* instalados no computador do usuário.

@@ -27,6 +27,7 @@ Legenda de Status:
 ### Categoria A — Concluído e Validado no Código e Repositório
 - [x] **Manifest V3 Validado:** `manifest.json` estruturado estritamente em Manifest V3 com versão `2.0.3` e metadados internacionalizados.
 - [x] **Suporte Multilíngue (i18n):** Traduções implementadas para `pt_BR`, `en` e `es`, seleção manual no popup, persistência local e preservação do padrão `pt_BR`.
+- [x] **Censura Automática por Inatividade (PR04):** Módulo e controles de temporização (10–3600s), efeitos de blur/darken/opaque e desbloqueio imediato sem latência.
 - [x] **Inventário de Permissões Auditado:**
   - `permissions`: Apenas `storage` (sem excessos).
   - `commands`: `toggle-panic` mapeado para `Alt+Q`.
@@ -40,24 +41,24 @@ Legenda de Status:
   - `icons/icon128.png` (128x128 px)
   - `popup/logo.png` (256x256 px)
 - [x] **Capturas de Tela Oficiais Incorporadas:**
-  - `assets/store/screenshots/01-painel-popup-controles.png` (405 x 451 px)
+  - `assets/store/screenshots/01-painel-popup-controles.png` (405 x 451 px) *(Pendente de regravação para refletir as novas seções de Inatividade e Idioma)*
   - `assets/store/screenshots/02-whatsapp-web-mensagens-ocultas.png` (1780 x 978 px)
-  - `assets/store/screenshots/03-whatsapp-web-painel-integrado.png` (1785 x 1002 px)
+  - `assets/store/screenshots/03-whatsapp-web-painel-integrado.png` (1785 x 1002 px) *(Pendente de regravação para refletir as novas seções de Inatividade e Idioma)*
   - `assets/store/screenshots/04-whatsapp-web-protecao-completa-midia-fotos.png` (1852 x 978 px)
 - [x] **Textos Oficiais da Loja:** Ficha completa documentada em `docs/CHROME_WEB_STORE_LISTING.md` (resumo de 122 caracteres, descrição detalhada, avisos legais e disclaimers).
 - [x] **Testes Automatizados:** Suíte de regressão passando com 100% de integridade (`node test/test-suite.js`).
 
 ### Categoria B — Documento Preparado, mas Pendente de Publicação
 - [ ] **Publicação da Política de Privacidade na Web:**
-  - *Status:* Documento oficial elaborado e auditado em `docs/PRIVACY_POLICY.md` (versão 2.0.0).
+  - *Status:* Documento oficial elaborado e auditado em `docs/PRIVACY_POLICY.md` (versão 2.0.3).
   - *Ação necessária:* Publicar o conteúdo em uma URL pública acessível (por exemplo, via GitHub Pages no repositório ou página institucional) para preenchimento obrigatório na ficha da Chrome Web Store.
   - *Responsável:* Victor Ladislau Viana.
 
 ### Categoria C — Ação Manual Necessária no Developer Dashboard
 - [ ] **Geração do Arquivo ZIP de Distribuição:**
-  - Gerar o pacote limpo contendo apenas os artefatos de execução:
+  - Gerar o pacote limpo contendo apenas os artefatos de execução para a versão 2.0.3 (excluindo pastas de teste, documentação e o pacote legado `Extensao_Conversa_Segura-v2.0.2.zip`):
     ```bash
-    zip -r tela-privada-v2.0.0.zip manifest.json background.js content/ popup/ icons/ src/
+    zip -r tela-privada-v2.0.3.zip manifest.json background.js _locales/ content/ popup/ icons/ src/
     ```
 - [ ] **Conta de Desenvolvedor Chrome Web Store:**
   - Acessar o [Chrome Web Store Developer Dashboard](https://chrome.google.com/webstore/devconsole).
@@ -71,7 +72,7 @@ Legenda de Status:
   - Justificar a permissão `storage` conforme `docs/CHROME_WEB_STORE_LISTING.md`.
 - [ ] **Upload dos Screenshots e Enquadramento:**
   - Carregar as 4 capturas de tela oficiais (`assets/store/screenshots/`).
-  - *Observação técnica:* Caso o validador de formulário do dashboard exija estritamente a proporção 16:10 ou resolução padrão (1280x800 ou 640x400 px), aplicar moldura neutra (letterbox) mantendo as imagens reais inalteradas.
+  - *Observação técnica:* Atualizar os screenshots 01 e 03 com as novas funcionalidades de inatividade e idioma antes da submissão final; caso o validador de formulário do dashboard exija estritamente a proporção 16:10 ou resolução padrão (1280x800 ou 640x400 px), aplicar moldura neutra (letterbox) mantendo as imagens reais inalteradas.
 - [ ] **Imagens Promocionais (Opcional):**
   - Caso deseje destaque promocional na vitrine da loja: carregar Small Tile (440x280 px) e/ou Marquee (1400x560 px).
 - [ ] **Submissão Formal do Pacote:**
