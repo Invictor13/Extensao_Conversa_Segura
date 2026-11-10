@@ -1704,8 +1704,8 @@ run_hover_suite()
                             // Verify storage was never modified during hover operations
                             assert.strictEqual(JSON.stringify(mockStorage), beforeHoverStorage, 'Hover reveal must never alter SettingsManager or storage');
 
-                            // 31. PR 2.0.3 — Temporary Hover Reveal for Sidebar Previews (Problema B) & Comprehensive Matrix
-                            console.log('31. Testing PR 2.0.3 Temporary Hover Reveal for Sidebar Previews & Media-Text Combinations...');
+                            // 31. PR03.1 — Smart Hover Reveal for Sidebar Rows, Previews, Names and Avatars
+                            console.log('31. Testing PR03.1 Smart Hover Reveal for Sidebar Rows, Previews, Names and Avatars (12 mandatory tests)...');
 
                             const pySidebarHoverSuiteScript = `
 import sys, json
@@ -1728,26 +1728,32 @@ html_sidebar_template = f'''
     <div id="side">
       <div id="pane-side">
         <!-- Conversation Row 1 -->
-        <div data-testid="cell-frame-container" id="row-conv-1">
-          <img id="avatar-conv-1" data-testid="avatar-tile" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7">
-          <span data-testid="cell-frame-title" id="name-conv-1">Carlos Eduardo</span>
-          <span data-testid="cell-frame-subtitle" id="preview-conv-1">Vamos revisar a proposta amanhã cedo.</span>
-          <span data-testid="cell-frame-time" id="time-conv-1">11:15</span>
+        <div data-testid="cell-frame-container" id="row-conv-1" style="display:flex; width:400px; height:60px; padding:8px;">
+          <img id="avatar-conv-1" data-testid="avatar-tile" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" style="width:40px; height:40px; margin-right:8px;">
+          <div id="row-conv-1-text" style="display:flex; flex-direction:column; flex:1;">
+            <span data-testid="cell-frame-title" id="name-conv-1">Carlos Eduardo</span>
+            <span data-testid="cell-frame-subtitle" id="preview-conv-1">Vamos revisar a proposta amanhã cedo.</span>
+          </div>
+          <span data-testid="cell-frame-time" id="time-conv-1" style="margin-left:auto;">11:15</span>
+          <div id="empty-space-conv-1" style="width:20px; height:100%;"></div>
         </div>
 
         <!-- Conversation Row 2 -->
-        <div data-testid="cell-frame-container" id="row-conv-2">
-          <img id="avatar-conv-2" data-testid="avatar-tile" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7">
-          <span data-testid="cell-frame-title" id="name-conv-2">Mariana Lima</span>
-          <span data-testid="cell-frame-subtitle" id="preview-conv-2">
-            <span data-testid="last-msg-status" id="last-status-conv-2">Entregue: </span>
-            <span class="_ak8l" id="snippet-ak8l-conv-2">Arquivo enviado com sucesso.</span>
-          </span>
-          <span data-testid="cell-frame-time" id="time-conv-2">10:02</span>
+        <div data-testid="cell-frame-container" id="row-conv-2" style="display:flex; width:400px; height:60px; padding:8px;">
+          <img id="avatar-conv-2" data-testid="avatar-tile" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" style="width:40px; height:40px; margin-right:8px;">
+          <div id="row-conv-2-text" style="display:flex; flex-direction:column; flex:1;">
+            <span data-testid="cell-frame-title" id="name-conv-2">Mariana Lima</span>
+            <span data-testid="cell-frame-subtitle" id="preview-conv-2">
+              <span data-testid="last-msg-status" id="last-status-conv-2">Entregue: </span>
+              <span class="_ak8l" id="snippet-ak8l-conv-2">Arquivo enviado com sucesso.</span>
+            </span>
+          </div>
+          <span data-testid="cell-frame-time" id="time-conv-2" style="margin-left:auto;">10:02</span>
+          <div id="empty-space-conv-2" style="width:20px; height:100%;"></div>
         </div>
 
         <!-- Conversation Row 3 (Alternative class selector _ak8i) -->
-        <div data-testid="cell-frame-container" id="row-conv-3">
+        <div data-testid="cell-frame-container" id="row-conv-3" style="display:flex; width:400px; height:60px; padding:8px;">
           <div class="_ak8i" id="snippet-ak8i-conv-3">Reunião confirmada para as 14h.</div>
           <div data-testid="cell-frame-time" class="_ak8i" id="time-conv-3">09:40</div>
         </div>
@@ -1790,49 +1796,144 @@ def run_sidebar_hover_suite():
         def get_filter(selector):
             return page.eval_on_selector(selector, 'el => window.getComputedStyle(el).filter')
 
-        # 1. Estado inicial de proteção da barra lateral e chat
+        # Estado inicial de proteção da barra lateral e chat
         assert is_blurred('#preview-conv-1'), f'preview-conv-1 must be blurred: {get_filter("#preview-conv-1")}'
         assert is_blurred('#preview-conv-2'), f'preview-conv-2 must be blurred: {get_filter("#preview-conv-2")}'
         assert is_blurred('#snippet-ak8i-conv-3'), f'snippet-ak8i-conv-3 must be blurred: {get_filter("#snippet-ak8i-conv-3")}'
         assert is_blurred('#name-conv-1'), 'name-conv-1 must be blurred by hideNames'
+        assert is_blurred('#name-conv-2'), 'name-conv-2 must be blurred by hideNames'
         assert is_blurred('#avatar-conv-1'), 'avatar-conv-1 must be blurred by hidePhotos'
+        assert is_blurred('#avatar-conv-2'), 'avatar-conv-2 must be blurred by hidePhotos'
         assert not is_blurred('#time-conv-1'), 'time-conv-1 must not be blurred'
         assert not is_blurred('#time-conv-3'), 'cell-frame-time with _ak8i must not be blurred'
 
-        # 2. Hover sobre a prévia da conversa 1
+        # Teste 1: Hover na área vazia da linha revela nome e horário (e prévia/foto da linha)
+        page.hover('#empty-space-conv-1')
+        page.wait_for_timeout(350)
+        assert not is_blurred('#name-conv-1'), 'Hover na área vazia da linha 1 deve revelar o nome'
+        assert not is_blurred('#time-conv-1'), 'Horário da linha 1 deve permanecer legível'
+        assert not is_blurred('#preview-conv-1'), 'Hover na linha 1 deve revelar a prévia'
+        assert not is_blurred('#avatar-conv-1'), 'Hover na linha 1 deve revelar o avatar'
+        # Conversa 2 deve permanecer completamente protegida
+        assert is_blurred('#name-conv-2'), 'Conversa 2 não deve ser revelada pelo hover na linha 1'
+        assert is_blurred('#preview-conv-2'), 'Prévia da conversa 2 deve permanecer borrada'
+        assert is_blurred('#avatar-conv-2'), 'Avatar da conversa 2 deve permanecer borrado'
+
+        # Teste 2: Hover no avatar revela os elementos previstos para aquela linha
+        page.hover('#avatar-conv-1')
+        page.wait_for_timeout(350)
+        assert not is_blurred('#avatar-conv-1'), 'Avatar da linha 1 deve estar revelado no hover do avatar'
+        assert not is_blurred('#name-conv-1'), 'Nome da linha 1 deve estar revelado no hover do avatar'
+        assert not is_blurred('#preview-conv-1'), 'Prévia da linha 1 deve estar revelada no hover do avatar'
+        assert is_blurred('#name-conv-2'), 'Conversa 2 não deve ser afetada'
+
+        # Teste 3: Hover no nome revela o conteúdo da linha
+        page.hover('#name-conv-1')
+        page.wait_for_timeout(350)
+        assert not is_blurred('#name-conv-1'), 'Nome da linha 1 revelado no hover do nome'
+        assert not is_blurred('#preview-conv-1'), 'Prévia revelada no hover do nome'
+        assert not is_blurred('#avatar-conv-1'), 'Avatar revelado no hover do nome'
+        assert is_blurred('#name-conv-2'), 'Conversa 2 não deve ser afetada'
+
+        # Teste 4: Hover na prévia revela o texto
+        # Teste 5: Hover na prévia também revela nome e foto
         page.hover('#preview-conv-1')
         page.wait_for_timeout(350)
-        assert not is_blurred('#preview-conv-1'), 'preview-conv-1 should be revealed on hover'
-        # Informações adjacentes permanecem borradas
-        assert is_blurred('#preview-conv-2'), 'preview-conv-2 must remain blurred'
-        assert is_blurred('#name-conv-1'), 'name-conv-1 must remain blurred during preview hover'
-        assert is_blurred('#avatar-conv-1'), 'avatar-conv-1 must remain blurred during preview hover'
+        assert not is_blurred('#preview-conv-1'), 'Prévia revelada no hover da prévia'
+        assert not is_blurred('#name-conv-1'), 'Nome revelado no hover da prévia'
+        assert not is_blurred('#avatar-conv-1'), 'Avatar revelado no hover da prévia'
+        assert is_blurred('#preview-conv-2'), 'Linha 2 permanece borrada'
 
-        # 3. Transição de hover para a prévia da conversa 2 (com sub-elementos last-msg-status e _ak8l)
+        # Hover em sub-elementos da conversa 2 (_ak8l e last-msg-status)
         page.hover('#snippet-ak8l-conv-2')
         page.wait_for_timeout(350)
-        assert is_blurred('#preview-conv-1'), 'preview-conv-1 must re-blur'
-        assert not is_blurred('#snippet-ak8l-conv-2'), 'snippet-ak8l-conv-2 should be revealed on hover'
-        assert is_blurred('#name-conv-2'), 'name-conv-2 must remain blurred'
+        assert is_blurred('#name-conv-1'), 'Linha 1 volta a ficar borrada'
+        assert is_blurred('#preview-conv-1'), 'Linha 1 volta a ficar borrada'
+        assert is_blurred('#avatar-conv-1'), 'Linha 1 volta a ficar borrada'
+        assert not is_blurred('#snippet-ak8l-conv-2'), 'snippet-ak8l revelado'
+        assert not is_blurred('#name-conv-2'), 'nome da linha 2 revelado'
+        assert not is_blurred('#avatar-conv-2'), 'avatar da linha 2 revelado'
 
-        # 4. Hover sobre status da conversa 2
+        # Hover sobre status da conversa 2
         page.hover('#last-status-conv-2')
         page.wait_for_timeout(350)
-        assert not is_blurred('#last-status-conv-2'), 'last-status-conv-2 should be revealed on hover'
+        assert not is_blurred('#last-status-conv-2'), 'last-status-conv-2 deve ser revelado'
 
-        # 5. Hover sobre _ak8i na conversa 3
+        # Hover sobre _ak8i na conversa 3
         page.hover('#snippet-ak8i-conv-3')
         page.wait_for_timeout(350)
-        assert not is_blurred('#snippet-ak8i-conv-3'), 'snippet-ak8i-conv-3 should be revealed on hover'
+        assert not is_blurred('#snippet-ak8i-conv-3'), 'snippet-ak8i-conv-3 deve ser revelado'
 
-        # 6. Restauração do blur ao retirar o cursor da barra lateral
+        # Teste 6: Sair da linha restaura o blur de todos os elementos
         page.mouse.move(0, 0)
         page.wait_for_timeout(350)
-        assert is_blurred('#preview-conv-1'), 'preview-conv-1 must re-blur when mouse leaves'
-        assert is_blurred('#preview-conv-2'), 'preview-conv-2 must re-blur when mouse leaves'
-        assert is_blurred('#snippet-ak8i-conv-3'), 'snippet-ak8i-conv-3 must re-blur when mouse leaves'
+        assert is_blurred('#preview-conv-1'), 'preview-conv-1 deve restaurar o blur'
+        assert is_blurred('#name-conv-1'), 'name-conv-1 deve restaurar o blur'
+        assert is_blurred('#avatar-conv-1'), 'avatar-conv-1 deve restaurar o blur'
+        assert is_blurred('#preview-conv-2'), 'preview-conv-2 deve restaurar o blur'
+        assert is_blurred('#name-conv-2'), 'name-conv-2 deve restaurar o blur'
+        assert is_blurred('#avatar-conv-2'), 'avatar-conv-2 deve restaurar o blur'
+        assert is_blurred('#snippet-ak8i-conv-3'), 'snippet-ak8i-conv-3 deve restaurar o blur'
 
-        # 7. Mídia sem legenda no chat (Problema A)
+        # Teste 7: Hover em uma conversa não revela outra conversa
+        page.hover('#row-conv-2')
+        page.wait_for_timeout(350)
+        assert is_blurred('#name-conv-1'), 'Hover na conversa 2 não revela conversa 1'
+        assert is_blurred('#preview-conv-1'), 'Hover na conversa 2 não revela prévia da conversa 1'
+        assert is_blurred('#avatar-conv-1'), 'Hover na conversa 2 não revela avatar da conversa 1'
+        assert not is_blurred('#name-conv-2'), 'Conversa 2 revelada'
+        assert not is_blurred('#preview-conv-2'), 'Prévia 2 revelada'
+        assert not is_blurred('#avatar-conv-2'), 'Avatar 2 revelado'
+
+        # Voltar ao estado sem hover
+        page.mouse.move(0, 0)
+        page.wait_for_timeout(350)
+
+        # Teste 8: Desativar Ocultar nomes mantém o nome visível independentemente do hover
+        page.eval_on_selector('#test-body', 'el => el.classList.remove("vlv-hide-names")')
+        page.wait_for_timeout(350)
+        assert not is_blurred('#name-conv-1'), 'Nome deve permanecer visível sem hideNames'
+        assert not is_blurred('#name-conv-2'), 'Nome deve permanecer visível sem hideNames'
+        assert is_blurred('#preview-conv-1'), 'Prévia continua protegida'
+        assert is_blurred('#avatar-conv-1'), 'Avatar continua protegido'
+
+        # Teste 9: Desativar Ocultar fotos mantém a foto visível independentemente do hover
+        page.eval_on_selector('#test-body', 'el => el.classList.remove("vlv-hide-photos")')
+        page.wait_for_timeout(350)
+        assert not is_blurred('#avatar-conv-1'), 'Avatar deve permanecer visível sem hidePhotos'
+        assert not is_blurred('#avatar-conv-2'), 'Avatar deve permanecer visível sem hidePhotos'
+        assert is_blurred('#preview-conv-1'), 'Prévia continua protegida'
+
+        # Teste 10: Desativar Ocultar prévias mantém a prévia visível independentemente do hover
+        page.eval_on_selector('#test-body', 'el => el.classList.remove("vlv-hide-previews")')
+        page.wait_for_timeout(350)
+        assert not is_blurred('#preview-conv-1'), 'Prévia deve permanecer visível sem hidePreviews'
+        assert not is_blurred('#preview-conv-2'), 'Prévia deve permanecer visível sem hidePreviews'
+
+        # Teste 11: Os filtros continuam funcionando isoladamente
+        page.eval_on_selector('#test-body', 'el => el.className = "vlv-hide-previews"')
+        page.wait_for_timeout(350)
+        assert is_blurred('#preview-conv-1'), 'Prévia deve estar protegida quando só hidePreviews=true'
+        assert not is_blurred('#name-conv-1'), 'Nome deve estar desprotegido quando hideNames=false'
+        assert not is_blurred('#avatar-conv-1'), 'Avatar deve estar desprotegido quando hidePhotos=false'
+
+        page.eval_on_selector('#test-body', 'el => el.className = "vlv-hide-names"')
+        page.wait_for_timeout(350)
+        assert not is_blurred('#preview-conv-1'), 'Prévia desprotegida quando hidePreviews=false'
+        assert is_blurred('#name-conv-1'), 'Nome protegido quando hideNames=true'
+        assert not is_blurred('#avatar-conv-1'), 'Avatar desprotegido quando hidePhotos=false'
+
+        page.eval_on_selector('#test-body', 'el => el.className = "vlv-hide-photos"')
+        page.wait_for_timeout(350)
+        assert not is_blurred('#preview-conv-1'), 'Prévia desprotegida quando hidePreviews=false'
+        assert not is_blurred('#name-conv-1'), 'Nome desprotegido quando hideNames=false'
+        assert is_blurred('#avatar-conv-1'), 'Avatar protegido quando hidePhotos=true'
+
+        # Restaurar todos os filtros para testes restantes
+        page.eval_on_selector('#test-body', 'el => el.className = "vlv-hide-previews vlv-hide-names vlv-hide-photos vlv-hide-messages vlv-hide-media"')
+        page.wait_for_timeout(350)
+
+        # Mídia sem legenda no chat (Problema A preservado)
         assert is_blurred('#nocaption-img'), 'nocaption-img must be blurred initially'
         page.hover('#nocaption-img')
         page.wait_for_timeout(350)
@@ -1841,7 +1942,7 @@ def run_sidebar_hover_suite():
         page.wait_for_timeout(350)
         assert is_blurred('#nocaption-img'), 'nocaption-img must re-blur when mouse leaves'
 
-        # 8. Mídia com legenda: hover sobre vídeo vs hover sobre legenda (Isolamento estrito)
+        # Mídia com legenda: hover sobre vídeo vs hover sobre legenda (Isolamento estrito)
         page.hover('#video-caption-content')
         page.wait_for_timeout(350)
         assert not is_blurred('#video-caption-content'), 'video must be completely revealed on hover'
@@ -1852,31 +1953,46 @@ def run_sidebar_hover_suite():
         assert not is_blurred('#video-caption-text'), 'caption text must be revealed on hover'
         assert is_blurred('#video-caption-content'), 'video must remain blurred while hovering caption'
 
-        # 9. Retirada do cursor restaura proteção completa
+        # Retirada do cursor restaura proteção completa
         page.mouse.move(0, 0)
         page.wait_for_timeout(350)
         assert is_blurred('#video-caption-content'), 'video must re-blur'
         assert is_blurred('#video-caption-text'), 'caption must re-blur'
 
-        # 10. Atualização dinâmica do DOM na barra lateral (Novas conversas recebidas)
+        # Teste 12: Elementos adicionados dinamicamente continuam obedecendo às regras
         page.evaluate('''() => {
             const pane = document.querySelector('#pane-side');
             const newRow = document.createElement('div');
             newRow.setAttribute('data-testid', 'cell-frame-container');
-            newRow.innerHTML = '<span data-testid=\"cell-frame-subtitle\" id=\"dynamic-preview\">Nova prévia recebida em tempo real</span>';
+            newRow.id = 'dynamic-row';
+            newRow.style.cssText = 'display:flex; width:400px; height:60px; padding:8px;';
+            newRow.innerHTML = '<img id="dynamic-avatar" data-testid="avatar-tile" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" style="width:40px; height:40px;">' +
+              '<span data-testid="cell-frame-title" id="dynamic-name">Contato Dinâmico</span>' +
+              '<span data-testid="cell-frame-subtitle" id="dynamic-preview">Nova prévia recebida em tempo real</span>' +
+              '<div id="dynamic-empty" style="flex:1; height:100%;"></div>';
             pane.appendChild(newRow);
         }''')
         page.wait_for_timeout(100)
         assert is_blurred('#dynamic-preview'), 'Dynamic preview must be blurred initially'
-        page.hover('#dynamic-preview')
+        assert is_blurred('#dynamic-name'), 'Dynamic name must be blurred initially'
+        assert is_blurred('#dynamic-avatar'), 'Dynamic avatar must be blurred initially'
+
+        # Hover na área vazia da linha dinâmica
+        page.hover('#dynamic-empty')
         page.wait_for_timeout(350)
-        assert not is_blurred('#dynamic-preview'), 'Dynamic preview must be revealed on hover'
+        assert not is_blurred('#dynamic-preview'), 'Dynamic preview must be revealed on row hover'
+        assert not is_blurred('#dynamic-name'), 'Dynamic name must be revealed on row hover'
+        assert not is_blurred('#dynamic-avatar'), 'Dynamic avatar must be revealed on row hover'
+
+        # Sair da linha dinâmica restaura o blur
         page.mouse.move(0, 0)
         page.wait_for_timeout(350)
         assert is_blurred('#dynamic-preview'), 'Dynamic preview must re-blur when mouse leaves'
+        assert is_blurred('#dynamic-name'), 'Dynamic name must re-blur when mouse leaves'
+        assert is_blurred('#dynamic-avatar'), 'Dynamic avatar must re-blur when mouse leaves'
 
         browser.close()
-        print('PR 2.0.3 Sidebar Previews and Media Matrix tests PASSED!')
+        print('PR03.1 Sidebar Previews, Names and Avatars Smart Hover Matrix tests PASSED!')
 
 run_sidebar_hover_suite()
 `;
@@ -1886,8 +2002,8 @@ run_sidebar_hover_suite()
 
                             try {
                               const sidebarTestOutput = execSync('python3 ' + tempSidebarHoverTestPath, { encoding: 'utf8' });
-                              assert.strictEqual(sidebarTestOutput.includes('PR 2.0.3 Sidebar Previews and Media Matrix tests PASSED!'), true);
-                              console.log('PR 2.0.3 Temporary Hover Reveal for Sidebar Previews & Media-Text Combinations PASSED!');
+                              assert.strictEqual(sidebarTestOutput.includes('PR03.1 Sidebar Previews, Names and Avatars Smart Hover Matrix tests PASSED!'), true);
+                              console.log('PR03.1 Sidebar Previews, Names and Avatars Smart Hover Matrix tests PASSED!');
                             } finally {
                               if (fs.existsSync(tempSidebarHoverTestPath)) {
                                 fs.unlinkSync(tempSidebarHoverTestPath);
