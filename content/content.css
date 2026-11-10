@@ -339,11 +339,62 @@ body.vlv-hide-media [data-testid="media-viewer"] canvas {
     filter: none !important;
   }
 
-  /* 6.4 Temporary hover reveal for sidebar chat previews */
+  /* 6.4 Temporary hover reveal for sidebar chat rows, previews, names and avatars */
+  /* Direct hover fallback on preview elements */
   body.vlv-hide-previews #pane-side [data-testid="cell-frame-subtitle"]:hover,
   body.vlv-hide-previews #pane-side [data-testid="last-msg-status"]:hover,
   body.vlv-hide-previews #pane-side [data-testid="cell-frame-container"] div._ak8l:hover,
-  body.vlv-hide-previews #pane-side [data-testid="cell-frame-container"] div._ak8i:not([data-testid="cell-frame-time"]):hover {
+  body.vlv-hide-previews #pane-side [data-testid="cell-frame-container"] div._ak8i:not([data-testid="cell-frame-time"]):hover,
+  body.vlv-hide-previews #pane-side div[role="listitem"] div._ak8l:hover,
+  body.vlv-hide-previews #pane-side div[role="listitem"] div._ak8i:not([data-testid="cell-frame-time"]):hover,
+  body.vlv-hide-previews #pane-side div[role="row"] div._ak8l:hover,
+  body.vlv-hide-previews #pane-side div[role="row"] div._ak8i:not([data-testid="cell-frame-time"]):hover,
+
+  /* Row container hover reveals previews */
+  body.vlv-hide-previews #pane-side [data-testid="cell-frame-container"]:hover [data-testid="cell-frame-subtitle"],
+  body.vlv-hide-previews #pane-side [data-testid="cell-frame-container"]:hover [data-testid="last-msg-status"],
+  body.vlv-hide-previews #pane-side [data-testid="cell-frame-container"]:hover div._ak8l,
+  body.vlv-hide-previews #pane-side [data-testid="cell-frame-container"]:hover div._ak8i:not([data-testid="cell-frame-time"]),
+  body.vlv-hide-previews #pane-side div[role="listitem"]:hover [data-testid="cell-frame-subtitle"],
+  body.vlv-hide-previews #pane-side div[role="listitem"]:hover [data-testid="last-msg-status"],
+  body.vlv-hide-previews #pane-side div[role="listitem"]:hover div._ak8l,
+  body.vlv-hide-previews #pane-side div[role="listitem"]:hover div._ak8i:not([data-testid="cell-frame-time"]),
+  body.vlv-hide-previews #pane-side div[role="row"]:hover [data-testid="cell-frame-subtitle"],
+  body.vlv-hide-previews #pane-side div[role="row"]:hover [data-testid="last-msg-status"],
+  body.vlv-hide-previews #pane-side div[role="row"]:hover div._ak8l,
+  body.vlv-hide-previews #pane-side div[role="row"]:hover div._ak8i:not([data-testid="cell-frame-time"]),
+  body.vlv-hide-previews #side [data-testid="cell-frame-container"]:hover [data-testid="cell-frame-subtitle"],
+  body.vlv-hide-previews #side [data-testid="cell-frame-container"]:hover [data-testid="last-msg-status"],
+  body.vlv-hide-previews #side [data-testid="cell-frame-container"]:hover div._ak8l,
+  body.vlv-hide-previews #side [data-testid="cell-frame-container"]:hover div._ak8i:not([data-testid="cell-frame-time"]),
+
+  /* Row container hover reveals contact / group names */
+  body.vlv-hide-names #pane-side [data-testid="cell-frame-container"]:hover [data-testid="cell-frame-title"],
+  body.vlv-hide-names #pane-side [data-testid="cell-frame-container"]:hover span[title][dir="auto"],
+  body.vlv-hide-names #pane-side div[role="listitem"]:hover [data-testid="cell-frame-title"],
+  body.vlv-hide-names #pane-side div[role="listitem"]:hover span[title][dir="auto"],
+  body.vlv-hide-names #pane-side div[role="row"]:hover [data-testid="cell-frame-title"],
+  body.vlv-hide-names #pane-side div[role="row"]:hover span[title][dir="auto"],
+  body.vlv-hide-names #side [data-testid="cell-frame-container"]:hover [data-testid="cell-frame-title"],
+  body.vlv-hide-names #side [data-testid="cell-frame-container"]:hover span[title][dir="auto"],
+
+  /* Row container hover reveals profile photos / avatars */
+  body.vlv-hide-photos #pane-side [data-testid="cell-frame-container"]:hover img,
+  body.vlv-hide-photos #pane-side [data-testid="cell-frame-container"]:hover image,
+  body.vlv-hide-photos #pane-side [data-testid="cell-frame-container"]:hover [data-testid="avatar-tile"],
+  body.vlv-hide-photos #pane-side [data-testid="cell-frame-container"]:hover [data-testid="chat-avatar"],
+  body.vlv-hide-photos #pane-side div[role="listitem"]:hover img,
+  body.vlv-hide-photos #pane-side div[role="listitem"]:hover image,
+  body.vlv-hide-photos #pane-side div[role="listitem"]:hover [data-testid="avatar-tile"],
+  body.vlv-hide-photos #pane-side div[role="listitem"]:hover [data-testid="chat-avatar"],
+  body.vlv-hide-photos #pane-side div[role="row"]:hover img,
+  body.vlv-hide-photos #pane-side div[role="row"]:hover image,
+  body.vlv-hide-photos #pane-side div[role="row"]:hover [data-testid="avatar-tile"],
+  body.vlv-hide-photos #pane-side div[role="row"]:hover [data-testid="chat-avatar"],
+  body.vlv-hide-photos #side [data-testid="cell-frame-container"]:hover img,
+  body.vlv-hide-photos #side [data-testid="cell-frame-container"]:hover image,
+  body.vlv-hide-photos #side [data-testid="cell-frame-container"]:hover [data-testid="avatar-tile"],
+  body.vlv-hide-photos #side [data-testid="cell-frame-container"]:hover [data-testid="chat-avatar"] {
     filter: none !important;
   }
 }
