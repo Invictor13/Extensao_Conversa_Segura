@@ -216,8 +216,10 @@ body.vlv-hide-media [data-testid="media-viewer"] canvas {
     filter: none !important;
   }
 
-  /* 6.2 Protection isolation: keep msg-container blurred when hover is specifically over an internal media element */
-  body.vlv-hide-messages #main [data-testid="msg-container"]:has(img:not([src*="emoji"]):hover, video:hover, canvas:hover, div[style*="background-image"]:hover) {
+  /* 6.2 Protection isolation: keep text, captions, and metadata blurred when hover is specifically over an internal media element */
+  body.vlv-hide-messages #main [data-testid="msg-container"]:has(img:not([src*="emoji"]):hover, video:hover, canvas:hover, div[style*="background-image"]:hover) div.copyable-text:not(:hover),
+  body.vlv-hide-messages #main [data-testid="msg-container"]:has(img:not([src*="emoji"]):hover, video:hover, canvas:hover, div[style*="background-image"]:hover) div[data-pre-plain-text]:not(:hover),
+  body.vlv-hide-messages #main [data-testid="msg-container"]:has(img:not([src*="emoji"]):hover, video:hover, canvas:hover, div[style*="background-image"]:hover) [data-id] .aria-label:not(:hover) {
     filter: blur(8px) !important;
   }
 
@@ -334,6 +336,14 @@ body.vlv-hide-media [data-testid="media-viewer"] canvas {
   body.vlv-hide-media [data-testid="media-viewer"] img:hover,
   body.vlv-hide-media [data-testid="media-viewer"] video:hover,
   body.vlv-hide-media [data-testid="media-viewer"] canvas:hover {
+    filter: none !important;
+  }
+
+  /* 6.4 Temporary hover reveal for sidebar chat previews */
+  body.vlv-hide-previews #pane-side [data-testid="cell-frame-subtitle"]:hover,
+  body.vlv-hide-previews #pane-side [data-testid="last-msg-status"]:hover,
+  body.vlv-hide-previews #pane-side [data-testid="cell-frame-container"] div._ak8l:hover,
+  body.vlv-hide-previews #pane-side [data-testid="cell-frame-container"] div._ak8i:not([data-testid="cell-frame-time"]):hover {
     filter: none !important;
   }
 }

@@ -8,7 +8,7 @@ Este documento reúne todas as informações, textos oficiais, declarações té
 
 - **Nome da Extensão:** Tela Privada
 - **Slogan / Tagline Oficial:** Proteção visual para WhatsApp Web
-- **Versão:** 2.0.2
+- **Versão:** 2.0.3
 - **Manifest:** Manifest V3 (com suporte nativo a internacionalização via `_locales/`)
 - **Categoria da Loja:** Produtividade (*Productivity*) / Privacidade e Segurança (*Privacy & Security*)
 - **Idioma Principal:** Português (Brasil) — `pt_BR` (padrão)
